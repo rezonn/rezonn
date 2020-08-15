@@ -1,0 +1,24 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+
+function newhtml(tag,attributes,ths) {
+  var rv = document.createElement(tag);
+  for (var x in attributes) {
+    if (x!="style") rv[x] = attributes[x];
+    else {
+      for (var s in attributes[x]) {
+        rv.style[s] = attributes[x][s];
+      }
+    }
+  }
+  if (ths) ths.appendChild(rv);
+  return rv;
+}
+
+window.onload = function(){
+  newhtml("div",{innerText:"hello world"},document.body);
+}
+
+</script>
+<body></body>
