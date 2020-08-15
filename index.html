@@ -15,11 +15,60 @@ function newhtml(tag,attributes,ths) {
   if (ths) ths.appendChild(rv);
   return rv;
 }
+  
+function getAsUriParameters(data) {
+   var url = '';
+   for (var prop in data) {
+      url += encodeURIComponent(prop) + '=' + 
+          encodeURIComponent(data[prop]) + '&';
+   }
+   return url.substring(0, url.length - 1)
+}
+  
+async function upload() {
+  //let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
+  var url = "https://www.googleapis.com/upload/youtube/v3/videos?"+getAsUriParameters({
+    'key':localStorage.getItem("Key"),
+    'uploadType':'resumable',
+    'part':'snippet, status',
+  });
+  newhtml("div",{innerText:url},document.body);
+  var data = {
+      "snippet": {
+          "title": Date.parse(new Date()),
+          "description": "home bell video",
+          "tags": ["home"],
+          "categoryId": 42
+      },
+      "status": {
+          "privacyStatus": "private"
+      }
+  }
+
+  try {
+    const response = await fetch(url, 
+    {
+      method:'POST',
+      headers:{
+        'Access-Control-Allow-Origin':'*',
+        'Access-Control-Allow-Methods':'POST, GET, OPTIONS, DELETE, PUT',
+        'Access-Control-Max-Age':'1000',
+        'Access-Control-Allow-Headers':'x-requested-with, Content-Type, origin, authorization, accept, client-security-token',
+        'Authorization':'Bearer '+localStorage.getItem("Authorization"),
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify(data)
+    });
+  } catch(e) {
+    newhtml("div",{innerText:"fetch error: "+e.message},document.body);
+  }
+}
 
 window.onload = function(){
   newhtml("div",{innerText:"hello world"},document.body);
   newhtml("div",{innerText:localStorage.getItem("Key")},document.body);
   newhtml("div",{innerText:localStorage.getItem("Authorization")},document.body);
+  upload();
 }
 
 </script>
