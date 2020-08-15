@@ -33,6 +33,7 @@ async function upload() {
     'part':'snippet, status',
   });
   //var url = "https://www.googleapis.com//upload/youtube/v3/videos?uploadType=resumable&part=snippet,status,contentDetails";
+  var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet%2Cstatus&key="+localStorage.getItem("Key");
   newhtml("div",{innerText:url},document.body);
   var data = {
       "snippet": {
@@ -57,10 +58,11 @@ async function upload() {
         'Access-Control-Max-Age':'1000',
         'Access-Control-Allow-Headers':'x-requested-with, Content-Type, origin, authorization, accept, client-security-token',
         */
+        'Accept':'application/json',
         'Authorization':'Bearer '+localStorage.getItem("Authorization"),
         'Content-Type':'application/json'
       },
-      body:JSON.stringify(data)
+      body:'{"snippet":{"categoryId":"22","description":"Description","title":"Test video"},"status":{"privacyStatus":"private"}}'
     });
   } catch(e) {
     newhtml("div",{innerText:"fetch error: "+e.message},document.body);
