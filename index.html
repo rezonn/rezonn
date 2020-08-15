@@ -32,6 +32,7 @@ async function upload() {
     'uploadType':'resumable',
     'part':'snippet, status',
   });
+  var url = "https://www.googleapis.com/upload/youtube/v3/videos";
   newhtml("div",{innerText:url},document.body);
   var data = {
       "snippet": {
