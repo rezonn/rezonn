@@ -32,7 +32,7 @@ async function upload() {
     'uploadType':'resumable',
     'part':'snippet, status',
   });
-  var url = "https://www.googleapis.com//upload/youtube/v3/videos?uploadType=resumable&part=snippet,status,contentDetails";
+  //var url = "https://www.googleapis.com//upload/youtube/v3/videos?uploadType=resumable&part=snippet,status,contentDetails";
   newhtml("div",{innerText:url},document.body);
   var data = {
       "snippet": {
@@ -60,7 +60,7 @@ async function upload() {
         'Authorization':'Bearer '+localStorage.getItem("Authorization"),
         'Content-Type':'application/json'
       },
-      body:JSON.stringify({})
+      body:JSON.stringify(data)
     });
   } catch(e) {
     newhtml("div",{innerText:"fetch error: "+e.message},document.body);
