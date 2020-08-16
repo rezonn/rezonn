@@ -67,7 +67,7 @@
       $('#auth-status').html('You are currently signed in and have granted ' +
           'access to this app.');
       
-      upload();
+      upload(GoogleAuth.currentUser.get().wc.access_token);
       
     } else {
       $('#sign-in-or-out-button').html('Sign In/Authorize');
@@ -106,7 +106,7 @@ function newhtml(tag,attributes,ths) {
   return rv;
 }
 
-async function upload() {
+async function upload(token) {
   var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet%2Cstatus&key="+localStorage.getItem("Key");
   newhtml("div",{innerText:url},document.body);
   var data = {
@@ -127,7 +127,7 @@ async function upload() {
       method:'POST',
       headers:{
         'Accept':'application/json',
-        'Authorization':'Bearer '+localStorage.getItem("Authorization"),
+        'Authorization':'Bearer '+token,
         'Content-Type':'application/json'
       },
       body:'{"snippet":{"categoryId":"22","description":"Description","title":"Test video"},"status":{"privacyStatus":"private"}}'
