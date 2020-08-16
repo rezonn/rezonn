@@ -157,6 +157,7 @@ async function upload() {
       },
       body:'{"snippet":{"categoryId":"22","description":"Description","title":"Test video"},"status":{"privacyStatus":"private"}}'
     });
+    newhtml("div",{innerText:( await responce.text() )},document.body);
   } catch(e) {
     newhtml("div",{innerText:"fetch error: "+e.message},document.body);
   }
