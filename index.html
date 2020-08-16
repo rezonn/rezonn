@@ -82,22 +82,15 @@
   }
 </script>
 
-<button id="sign-in-or-out-button"
-        style="margin-left: 25px">Sign In/Authorize</button>
-<button id="revoke-access-button"
-        style="display: none; margin-left: 25px">Revoke access</button>
+<button id="sign-in-or-out-button" style="margin-left: 25px">Sign In/Authorize</button>
+<button id="revoke-access-button" style="display: none; margin-left: 25px">Revoke access</button>
 
 <div id="auth-status" style="display: inline; padding-left: 25px"></div><hr>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-<script async defer src="https://apis.google.com/js/api.js"
-        onload="this.onload=function(){};handleClientLoad()"
-        onreadystatechange="if (this.readyState === 'complete') this.onload()">
+<script async defer src="https://apis.google.com/js/api.js" onload="this.onload=function(){};handleClientLoad()" onreadystatechange="if (this.readyState === 'complete') this.onload()">
 </script>
-
 <script>
-  
-
 
 function newhtml(tag,attributes,ths) {
   var rv = document.createElement(tag);
@@ -112,24 +105,8 @@ function newhtml(tag,attributes,ths) {
   if (ths) ths.appendChild(rv);
   return rv;
 }
-  
-function getAsUriParameters(data) {
-   var url = '';
-   for (var prop in data) {
-      url += encodeURIComponent(prop) + '=' + 
-          encodeURIComponent(data[prop]) + '&';
-   }
-   return url.substring(0, url.length - 1)
-}
-  
+
 async function upload() {
-  //let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-  var url = "https://www.googleapis.com/upload/youtube/v3/videos?"+getAsUriParameters({
-    'key':localStorage.getItem("Key"),
-    'uploadType':'resumable',
-    'part':'snippet, status',
-  });
-  //var url = "https://www.googleapis.com//upload/youtube/v3/videos?uploadType=resumable&part=snippet,status,contentDetails";
   var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet%2Cstatus&key="+localStorage.getItem("Key");
   newhtml("div",{innerText:url},document.body);
   var data = {
@@ -157,7 +134,7 @@ async function upload() {
       },
       body:'{"snippet":{"categoryId":"22","description":"Description","title":"Test video"},"status":{"privacyStatus":"private"}}'
     });
-    newhtml("div",{innerText:( await responce.text() )},document.body);
+    newhtml("div",{innerText:( await response.text() )},document.body);
   } catch(e) {
     newhtml("div",{innerText:"fetch error: "+e.message},document.body);
   }
