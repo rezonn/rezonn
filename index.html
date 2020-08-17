@@ -35,10 +35,10 @@
 
       // Call handleAuthClick function when user clicks on
       //      "Sign In/Authorize" button.
-      sign.click(function() {
+      $('#sign-in-or-out-button').click(function() {
         handleAuthClick();
       });
-      revoke.click(function() {
+      $('#revoke-access-button').click(function() {
         revokeAccess();
       });
     });
@@ -62,16 +62,18 @@
     var user = GoogleAuth.currentUser.get();
     var isAuthorized = user.hasGrantedScopes(SCOPE);
     if (isAuthorized) {
-      sign.textContent = 'Sign out';
-      revoke.style.display = 'inline-block';
-      status.textContent = 'You are currently signed in and have granted access to this app.';
+      $('#sign-in-or-out-button').html('Sign out');
+      $('#revoke-access-button').css('display', 'inline-block');
+      $('#auth-status').html('You are currently signed in and have granted ' +
+          'access to this app.');
       
-      upload(GoogleAuth.currentUser.get().wc.access_token);
+      upload();
       
     } else {
-      sign.textContent = 'Sign In/Authorize';
-      revoke.style.display = 'none';
-      status.textContent = 'You have not authorized this app or you are signed out.';
+      $('#sign-in-or-out-button').html('Sign In/Authorize');
+      $('#revoke-access-button').css('display', 'none');
+      $('#auth-status').html('You have not authorized this app or you are ' +
+          'signed out.');
     }
   }
 
@@ -80,10 +82,10 @@
   }
 </script>
 
-<button id="sign" style="margin-left: 25px">Sign In/Authorize</button>
-<button id="revoke" style="display: none; margin-left: 25px">Revoke access</button>
+<button id="sign-in-or-out-button" style="margin-left: 25px">Sign In/Authorize</button>
+<button id="revoke-access-button" style="display: none; margin-left: 25px">Revoke access</button>
 
-<div id="status" style="display: inline; padding-left: 25px"></div><hr>
+<div id="auth-status" style="display: inline; padding-left: 25px"></div><hr>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <script async defer src="https://apis.google.com/js/api.js" onload="this.onload=function(){};handleClientLoad()" onreadystatechange="if (this.readyState === 'complete') this.onload()">
@@ -104,7 +106,7 @@ function newhtml(tag,attributes,ths) {
   return rv;
 }
 
-async function upload(token) {
+async function upload() {
   var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet%2Cstatus&key="+localStorage.getItem("Key");
   newhtml("div",{innerText:url},document.body);
   var data = {
@@ -124,8 +126,10 @@ async function upload(token) {
     {
       method:'POST',
       headers:{
+        'Access-Control-Allow-Origin':'*',
+
         'Accept':'application/json',
-        'Authorization':'Bearer '+token,
+        'Authorization':'Bearer '+localStorage.getItem("Authorization"),
         'Content-Type':'application/json'
       },
       body:'{"snippet":{"categoryId":"22","description":"Description","title":"Test video"},"status":{"privacyStatus":"private"}}'
