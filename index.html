@@ -7,7 +7,8 @@
   function handleClientLoad() {
     // Load the API's client and auth2 modules.
     // Call the initClient function after the modules load.
-    gapi.load('client:auth2', initClient);
+    if (!localStorage.getItem("user")) gapi.load('client:auth2', initClient);
+    else upload(localStorage.getItem("user"));
   }
 
   function initClient() {
@@ -109,7 +110,7 @@ function newhtml(tag,attributes,ths) {
 async function upload(token) {
   newhtml("div",{innerText:token},document.body);
   var url = "https://www.googleapis.com/youtube/v3/videos?part=snippet%2Cstatus&key="+localStorage.getItem("Key");
-  newhtml("div",{innerText:url},document.body);
+  //newhtml("div",{innerText:url},document.body);
   var data = {
       "snippet": {
           "title": Date.parse(new Date()),
