@@ -29,33 +29,44 @@ window.onload = async function(){
 var frames = [];
 var keyframe = 10;
 
+async function jpeg2dropbox(blob,filename) {
+  try {
+    await fetch("https://content.dropboxapi.com/2/files/upload", {
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+localStorage.getItem("dropbox"),
+        'Dropbox-API-Arg':'{"path":"/home/'+Math.round(Math.random()*10000)+'.jpg","mode":"overwrite","autorename":true,"mute":false}',
+        'Content-Type':'application/octet-stream'
+      },
+      body:blob
+    });
+  } catch(e) {console.log("fetch error: "+e.message)}
+}
+
 async function main() {
+  var dsize = new cv.Size(300, 300);
+
   cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
+  cv.resize(frames[0], frames[0], dsize, 0, 0, cv.INTER_LINEAR);
+
   cv.cvtColor(frames[keyframe], frames[keyframe], cv.COLOR_RGBA2GRAY, 0);
-  let dst = new cv.Mat();
+  cv.resize(frames[keyframe], frames[keyframe], dsize, 0, 0, cv.INTER_LINEAR);
+
+  dst = new cv.Mat();
   cv.subtract(frames[0],frames[keyframe],dst);
+
+  var dsize = new cv.Size(10, 10);
+  cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
+
+
   cv.imshow('canvas2', dst);
-  var imd = canvas2.getContext("2d").getImageData(0,0,canvas2.width,canvas2.height).data;
-  var m = 0;
-  for (var j=0;j<imd.length;j++) {
-    if (imd[j]>100) m++;
-  }
-  console.log(m);
-  m = m-307200;
-  if (m>100) {
+
+  var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
+
+  if (sorted[0]>50) {
+    console.log([sorted[0],sorted[10],sorted[50]].join("_"));
     let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-    try {
-      const response = await fetch("https://content.dropboxapi.com/2/files/upload", 
-      {
-        method:'POST',
-        headers:{
-          'Authorization':'Bearer '+localStorage.getItem("dropbox"),
-          'Dropbox-API-Arg':'{"path":"/home/'+Math.round(Math.random()*10000)+'.jpg","mode":"overwrite","autorename":true,"mute":false}',
-          'Content-Type':'application/octet-stream'
-        },
-        body:blob
-      });
-    } catch(e) {console.log("fetch error: "+e.message)}
+    await jpeg2dropbox(blob, Math.round(Math.random()*10000) );
   }
   dst.delete();
   frames.map(function(a){
@@ -90,4 +101,3 @@ video.onplay = function(){
 </script>
 </body>
 </html>
-
