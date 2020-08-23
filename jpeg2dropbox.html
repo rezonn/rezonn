@@ -65,7 +65,9 @@ async function main() {
   if (sorted[0]>50) {
     console.log([sorted[0],sorted[10],sorted[50]].join("_"));
     let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-    await jpeg2dropbox(blob, "/home/"+Math.round(Math.random()*10000)+".jpg" );
+    var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes()].join("-");
+    //await 
+    jpeg2dropbox(blob, "/home/"+dc+".jpg" );
   }
   dst.delete();
   frames.map(function(a,i){
