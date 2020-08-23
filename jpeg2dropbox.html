@@ -38,6 +38,7 @@ function ascript(src){
 }
 
 window.onload = async function(){
+  last = Date.parse(new Date());
   if (!localStorage.getItem("dropbox")) localStorage.setItem("dropbox", prompt('Dropbox Authorization'));
   await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
 }
