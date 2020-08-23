@@ -65,7 +65,7 @@ async function main() {
   if (sorted[0]>50) {
     console.log([sorted[0],sorted[10],sorted[50]].join("_"));
     let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-    var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes()].join("-");
+    var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
     //await 
     jpeg2dropbox(blob, "/home/"+dc+".jpg" );
   }
