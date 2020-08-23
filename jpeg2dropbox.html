@@ -22,13 +22,14 @@ function ascript(src){
 }
 
 window.onload = async function(){
+  if (!localStorage.getItem("dropbox")) alert("dropbox api");
   await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
 }
 
 var frames = [];
 var keyframe = 10;
 
-async function jpeg2dropbox(blob,filename) {
+async function blob2dropbox(blob,filename) {
   try {
     await fetch("https://content.dropboxapi.com/2/files/upload", {
       method:'POST',
@@ -61,13 +62,14 @@ async function main() {
   cv.imshow('canvas2', dst);
 
   var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
+  var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
 
   if (sorted[0]>50) {
     console.log([sorted[0],sorted[10],sorted[50]].join("_"));
     let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-    var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
-    //await 
-    jpeg2dropbox(blob, "/home/"+dc+".jpg" );
+    
+    blob2dropbox(blob, "/home/"+dc+".jpg");
+    last = Date.parse(new Date());
   }
   dst.delete();
   frames.map(function(a,i){
@@ -75,6 +77,7 @@ async function main() {
     a.delete();
   })
   frames = [];
+  if (Date.parse(new Date()) - last > 60000) blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/"+dc+".jpg");
 }
 
 navigator.mediaDevices.getUserMedia({video:true}).then(function (stream) {
