@@ -10,6 +10,22 @@
 <style>:-webkit-full-screen {position:fixed;width:100%;height:auto;top:0;left:0;}</style>
 <script>
 
+function newhtml(tag,attributes,ths) {
+  var rv = document.createElement(tag);
+  for (var x in attributes) {
+    if (x!="style") rv[x] = attributes[x];
+    else {
+      for (var s in attributes[x]) {
+        rv.style[s] = attributes[x][s];
+      }
+    }
+  }
+  if (ths) ths.appendChild(rv);
+  return rv;
+}
+  
+console.log = function(text) {newhtml("div",{innerText:text},document.body)}
+
 function ascript(src){
   return new Promise((resolve, reject) => {
     let script2 = document.createElement('script');
