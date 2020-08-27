@@ -37,9 +37,9 @@ function ascript(src){
   })
 }
 
-function gotDevices() {
+async function gotDevices() {
 
-  navigator.mediaDevices.enumerateDevices().forEach(mediaDevice => {
+  (await navigator.mediaDevices.enumerateDevices()).forEach(mediaDevice => {
     if (mediaDevice.kind === 'videoinput') {
       const option = document.createElement('option');
       option.value = mediaDevice.deviceId;
@@ -56,7 +56,7 @@ function gotDevices() {
 
 window.onload = async function(){
   gotDevices();
-  
+
   last = Date.parse(new Date());
   if (!localStorage.getItem("dropbox")) localStorage.setItem("dropbox", prompt('Dropbox Authorization'));
   await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
