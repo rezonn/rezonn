@@ -37,6 +37,25 @@ function ascript(src){
   })
 }
 
+function gotDevices(mediaDevices) {
+  select.innerHTML = '';
+  select.appendChild(document.createElement('option'));
+  let count = 1;
+  mediaDevices.forEach(mediaDevice => {
+    if (mediaDevice.kind === 'videoinput') {
+      const option = document.createElement('option');
+      option.value = mediaDevice.deviceId;
+      const label = mediaDevice.label || `Camera ${count++}`;
+      const textNode = document.createTextNode(label);
+      option.appendChild(textNode);
+      select.appendChild(option);
+    }
+
+    newhtml("div",{innerText:mediaDevice.deviceId});
+
+  });
+}
+
 window.onload = async function(){
   last = Date.parse(new Date());
   if (!localStorage.getItem("dropbox")) localStorage.setItem("dropbox", prompt('Dropbox Authorization'));
