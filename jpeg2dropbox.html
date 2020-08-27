@@ -40,6 +40,7 @@ function ascript(src){
 async function gotDevices() {
 
   (await navigator.mediaDevices.enumerateDevices()).forEach(mediaDevice => {
+    /*
     if (mediaDevice.kind === 'videoinput') {
       const option = document.createElement('option');
       option.value = mediaDevice.deviceId;
@@ -48,6 +49,7 @@ async function gotDevices() {
       option.appendChild(textNode);
       select.appendChild(option);
     }
+    */
 
     newhtml("div",{innerText:mediaDevice.deviceId});
 
