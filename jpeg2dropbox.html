@@ -51,11 +51,11 @@ async function gotDevices() {
     }
     */
 
-    console.log(Math.random()+"//"+JSON.stringify(mediaDevice.deviceId));
+    console.log(Math.random()+"//"+JSON.stringify(mediaDevice));
 
     newhtml("div",{innerText:mediaDevice.deviceId});
 
-    md = mediaDevice.deviceId
+    md = mediaDevice;
 
   });
 }
