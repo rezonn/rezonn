@@ -41,21 +41,17 @@ async function gotDevices() {
   (await navigator.mediaDevices.enumerateDevices()).forEach(mediaDevice => {
     console.log(Math.random()+"//"+JSON.stringify(mediaDevice));
     newhtml("div",{innerText:mediaDevice.deviceId});
+    video.srcObject = cameraId2stream(mediaDevice.deviceId);
     md = mediaDevice;
   });
 }
 navigator.mediaDevices.ondevicechange = gotDevices;
 
-async function cameraId_stream(cameraId, minWidth, minHeight) {
+async function cameraId2stream(cameraId) {
     const constraints = {
         'audio': {'echoCancellation': true},
-        'video': {
-            'deviceId': cameraId,
-            'width': {'min': minWidth},
-            'height': {'min': minHeight}
-            }
+        'video': {'deviceId': cameraId}
         }
-
     return await navigator.mediaDevices.getUserMedia(constraints);
 }
 
@@ -123,11 +119,13 @@ async function main() {
   }
 }
 
+/*
 navigator.mediaDevices.getUserMedia({video:true}).then(function (stream) {
   video.srcObject = stream;
 }).catch(function (error) {
   console.log(error);
 });
+*/
 
 video.onplay = function(){
   canvas.width = video.videoWidth;
