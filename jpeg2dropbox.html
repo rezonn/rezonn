@@ -38,18 +38,14 @@ function ascript(src){
 }
 
 async function cameraId2stream(cameraId) {
-    const constraints = {
-        //'audio': {'echoCancellation': true},
-        'audio': false,
-        'video': {'deviceId': cameraId}
-        }
-    return await navigator.mediaDevices.getUserMedia(constraints);
+    return await navigator.mediaDevices.getUserMedia({"audio":false,"video":{"deviceId":cameraId}});
 }
 
 async function allDevices() {
   (await navigator.mediaDevices.enumerateDevices()).map(async function (device) {
     console.log(device.deviceId);
-    video.srcObject = await cameraId2stream(device.deviceId);
+    //video.srcObject = await cameraId2stream(device.deviceId);
+    video.srcObject = await navigator.mediaDevices.getUserMedia({"audio":false,"video":{"deviceId":device.deviceId}});
   });
 }
 navigator.mediaDevices.ondevicechange = allDevices;
