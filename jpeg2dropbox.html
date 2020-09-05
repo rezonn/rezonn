@@ -47,8 +47,11 @@ async function allDevices() {
 navigator.mediaDevices.ondevicechange = allDevices;
 
 window.onload = async function(){
-  await navigator.mediaDevices.getUserMedia({video:true});
-  allDevices();
+  try {
+    if (await navigator.mediaDevices.getUserMedia({video:true})) allDevices();
+    else console.log("no device");
+  } catch(e) {console.log(e.message)}
+
   last = Date.parse(new Date());
   if (!localStorage.getItem("dropbox")) localStorage.setItem("dropbox", prompt('Dropbox Authorization'));
   await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
@@ -78,16 +81,16 @@ video.onplay = function(){
   var ctx = canvas.getContext('2d');
   (async function loop() {
       //if (!ths.paused && !ths.ended) {
-        ctx.drawImage(ths, 0, 0);
-        if (frames.length<keyframe+2) {
-          if (frames.length==0 || frames.length==keyframe)
-          frames.push( cv.imread(canvas) );
-          else frames.push( 0 );
-        }
-        else {
-          await main();
-        }
-        window.requestAnimationFrame(loop);
+      ctx.drawImage(ths, 0, 0);
+      if (frames.length<keyframe+2) {
+        if (frames.length==0 || frames.length==keyframe)
+        frames.push( cv.imread(canvas) );
+        else frames.push( 0 );
+      }
+      else {
+        await main();
+      }
+      window.requestAnimationFrame(loop);
       //}
   })();
 }
