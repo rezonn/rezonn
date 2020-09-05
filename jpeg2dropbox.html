@@ -38,6 +38,7 @@ function ascript(src){
 }
 
 async function allDevices() {
+  console.log("enumerateDevices");
   (await navigator.mediaDevices.enumerateDevices()).map(async function (device) {
     console.log(device.deviceId);
     video.srcObject = await navigator.mediaDevices.getUserMedia({"audio":false,"video":{"deviceId":device.deviceId}});
