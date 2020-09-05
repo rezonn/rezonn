@@ -43,12 +43,12 @@ async function allDevices() {
     console.log(device.deviceId);
     var stream = await navigator.mediaDevices.getUserMedia({"audio":false,"video":{"deviceId":device.deviceId}});
     video.srcObject = stream;
-    stream.mediaStream.getVideoTracks().map(function(track){
+    stream.getVideoTracks().map(function(track){
       const capabilities = track.getCapabilities();
       const settings = track.getSettings();
       console.log("capabilities="+JSON.stringify(capabilities));
       console.log("settings="+JSON.stringify(settings));
-      
+
     })
   });
 }
