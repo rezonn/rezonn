@@ -55,14 +55,23 @@ async function cameraId2stream(cameraId) {
 }
 
 window.onload = async function(){
-  
+
+  /*
   navigator.mediaDevices.getUserMedia({video:true}).then(function (stream) {
     video.srcObject = stream;
   }).catch(function (error) {
     console.log(error);
   });
+  */
+
+  await navigator.mediaDevices.getUserMedia({video:true});
+
+
+
+
 
   gotDevices();
+
   last = Date.parse(new Date());
   if (!localStorage.getItem("dropbox")) localStorage.setItem("dropbox", prompt('Dropbox Authorization'));
   await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
