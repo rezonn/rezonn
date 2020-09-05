@@ -41,7 +41,15 @@ async function allDevices() {
   console.log("enumerateDevices");
   (await navigator.mediaDevices.enumerateDevices()).map(async function (device) {
     console.log(device.deviceId);
-    video.srcObject = await navigator.mediaDevices.getUserMedia({"audio":false,"video":{"deviceId":device.deviceId}});
+    var stream = await navigator.mediaDevices.getUserMedia({"audio":false,"video":{"deviceId":device.deviceId}});
+    video.srcObject = stream;
+    stream.mediaStream.getVideoTracks().map(function(track){
+      const capabilities = track.getCapabilities();
+      const settings = track.getSettings();
+      console.log("capabilities="+JSON.stringify(capabilities));
+      console.log("settings="+JSON.stringify(settings));
+      
+    })
   });
 }
 navigator.mediaDevices.ondevicechange = allDevices;
@@ -94,7 +102,9 @@ video.onplay = function(){
         else frames.push( 0 );
       }
       else {
-        await main();
+        try {
+          await main();
+        } catch(e){console.log(e.message)}
       }
       window.requestAnimationFrame(loop);
       //}
@@ -116,10 +126,10 @@ async function main() {
   var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
   if (sorted[0]>50) {
     console.log([sorted[0],sorted[10],sorted[50]].join("_"));
-    try {
-      let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-      blob2dropbox(blob, "/home/"+dc+".jpg");
-    } catch(e){console.log("canvas.toBlob error")}
+    //try {
+    let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
+    blob2dropbox(blob, "/home/"+dc+".jpg");
+    //} catch(e){console.log("canvas.toBlob error")}
 
     last = Date.parse(new Date());
   }
