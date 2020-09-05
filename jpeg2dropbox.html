@@ -54,6 +54,15 @@ async function gotDevices() {
 navigator.mediaDevices.ondevicechange = gotDevices;
 
 window.onload = async function(){
+
+  navigator.mediaDevices.getUserMedia({video:true}).then(function (stream) {
+    video.srcObject = stream;
+  }).catch(function (error) {
+    console.log(error);
+  });
+
+
+
   gotDevices();
   last = Date.parse(new Date());
   if (!localStorage.getItem("dropbox")) localStorage.setItem("dropbox", prompt('Dropbox Authorization'));
@@ -118,11 +127,6 @@ async function main() {
 }
 
 
-navigator.mediaDevices.getUserMedia({video:true}).then(function (stream) {
-  //video.srcObject = stream;
-}).catch(function (error) {
-  console.log(error);
-});
 
 
 video.onplay = function(){
