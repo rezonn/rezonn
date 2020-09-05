@@ -48,13 +48,19 @@ navigator.mediaDevices.ondevicechange = allDevices;
 
 window.onload = async function(){
   try {
+    await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
+  } catch(e) {
+    console.log(e.message);
+  }
+  try {
     if (await navigator.mediaDevices.getUserMedia({video:true})) allDevices();
     else console.log("no device");
-  } catch(e) {console.log(e.message)}
-
+  } catch(e) {
+    console.log(e.message);
+  };
   last = Date.parse(new Date());
   if (!localStorage.getItem("dropbox")) localStorage.setItem("dropbox", prompt('Dropbox Authorization'));
-  await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
+  
 }
 
 async function blob2dropbox(blob,filename) {
