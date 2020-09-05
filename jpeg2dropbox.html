@@ -40,7 +40,7 @@ function ascript(src){
 async function gotDevices() {
   (await navigator.mediaDevices.enumerateDevices()).forEach(mediaDevice => {
     console.log(mediaDevice.deviceId);
-    video.srcObject = cameraId2stream(mediaDevice.deviceId);
+    video.srcObject = await cameraId2stream(mediaDevice.deviceId);
   });
 }
 navigator.mediaDevices.ondevicechange = gotDevices;
