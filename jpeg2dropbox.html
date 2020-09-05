@@ -54,9 +54,6 @@ window.onload = async function(){
   await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
 }
 
-var frames = [];
-var keyframe = 10;
-
 async function blob2dropbox(blob,filename) {
   try {
     await fetch("https://content.dropboxapi.com/2/files/upload", {
@@ -71,13 +68,16 @@ async function blob2dropbox(blob,filename) {
   } catch(e) {console.log("fetch error: "+e.message)}
 }
 
+var frames = [];
+var keyframe = 10;
+
 video.onplay = function(){
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   var ths = this;
   var ctx = canvas.getContext('2d');
   (async function loop() {
-      if (!ths.paused && !ths.ended) {
+      //if (!ths.paused && !ths.ended) {
         ctx.drawImage(ths, 0, 0);
         if (frames.length<keyframe+2) {
           if (frames.length==0 || frames.length==keyframe)
@@ -88,7 +88,7 @@ video.onplay = function(){
           await main();
         }
         window.requestAnimationFrame(loop);
-      }
+      //}
   })();
 }
 
