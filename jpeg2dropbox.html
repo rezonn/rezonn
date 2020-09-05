@@ -46,9 +46,9 @@ async function cameraId2stream(cameraId) {
 }
 
 async function gotDevices() {
-  (await navigator.mediaDevices.enumerateDevices()).forEach(mediaDevice => {
-    console.log(mediaDevice.deviceId);
-    video.srcObject = await cameraId2stream(mediaDevice.deviceId);
+  (await navigator.mediaDevices.enumerateDevices()).map(async function (device) {
+    console.log(device.deviceId);
+    video.srcObject = await cameraId2stream(device.deviceId);
   });
 }
 navigator.mediaDevices.ondevicechange = gotDevices;
