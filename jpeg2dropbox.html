@@ -78,46 +78,6 @@ async function blob2dropbox(blob,filename) {
   } catch(e) {console.log("fetch error: "+e.message)}
 }
 
-async function main() {
-  var dsize = new cv.Size(300, 300);
-
-  cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
-  cv.resize(frames[0], frames[0], dsize, 0, 0, cv.INTER_LINEAR);
-
-  cv.cvtColor(frames[keyframe], frames[keyframe], cv.COLOR_RGBA2GRAY, 0);
-  cv.resize(frames[keyframe], frames[keyframe], dsize, 0, 0, cv.INTER_LINEAR);
-
-  dst = new cv.Mat();
-  cv.subtract(frames[0],frames[keyframe],dst);
-
-  var dsize = new cv.Size(10, 10);
-  cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
-
-
-  cv.imshow('canvas2', dst);
-
-  var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
-  var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
-
-  if (sorted[0]>50) {
-    console.log([sorted[0],sorted[10],sorted[50]].join("_"));
-    let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-    
-    blob2dropbox(blob, "/home/"+dc+".jpg");
-    last = Date.parse(new Date());
-  }
-  dst.delete();
-  frames.map(function(a,i){
-    if (i==0 || i==keyframe)
-    a.delete();
-  })
-  frames = [];
-  if (Date.parse(new Date()) - last > 60000) {
-    blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
-    last = Date.parse(new Date());
-  }
-}
-
 video.onplay = function(){
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -137,6 +97,37 @@ video.onplay = function(){
         window.requestAnimationFrame(loop);
       }
   })();
+}
+
+async function main() {
+  var dsize = new cv.Size(300, 300);
+  cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
+  cv.resize(frames[0], frames[0], dsize, 0, 0, cv.INTER_LINEAR);
+  cv.cvtColor(frames[keyframe], frames[keyframe], cv.COLOR_RGBA2GRAY, 0);
+  cv.resize(frames[keyframe], frames[keyframe], dsize, 0, 0, cv.INTER_LINEAR);
+  dst = new cv.Mat();
+  cv.subtract(frames[0],frames[keyframe],dst);
+  var dsize = new cv.Size(10, 10);
+  cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
+  cv.imshow('canvas2', dst);
+  var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
+  var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
+  if (sorted[0]>50) {
+    console.log([sorted[0],sorted[10],sorted[50]].join("_"));
+    let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
+    blob2dropbox(blob, "/home/"+dc+".jpg");
+    last = Date.parse(new Date());
+  }
+  dst.delete();
+  frames.map(function(a,i){
+    if (i==0 || i==keyframe)
+    a.delete();
+  })
+  frames = [];
+  if (Date.parse(new Date()) - last > 60000) {
+    blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
+    last = Date.parse(new Date());
+  }
 }
 
 </script>
