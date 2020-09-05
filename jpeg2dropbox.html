@@ -46,7 +46,7 @@ async function cameraId2stream(cameraId) {
 }
 
 async function gotDevices() {
-  (await navigator.mediaDevices.enumerateDevices()).forEach(mediaDevice => {
+  (await navigator.mediaDevices.enumerateDevices()).map(mediaDevice => {
     console.log(mediaDevice.deviceId);
     video.srcObject = await cameraId2stream(mediaDevice.deviceId);
   });
@@ -117,13 +117,13 @@ async function main() {
   }
 }
 
-/*
+
 navigator.mediaDevices.getUserMedia({video:true}).then(function (stream) {
-  video.srcObject = stream;
+  //video.srcObject = stream;
 }).catch(function (error) {
   console.log(error);
 });
-*/
+
 
 video.onplay = function(){
   canvas.width = video.videoWidth;
