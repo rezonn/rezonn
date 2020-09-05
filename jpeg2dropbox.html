@@ -39,7 +39,8 @@ function ascript(src){
 
 async function cameraId2stream(cameraId) {
     const constraints = {
-        'audio': {'echoCancellation': true},
+        //'audio': {'echoCancellation': true},
+        'audio': false,
         'video': {'deviceId': cameraId}
         }
     return await navigator.mediaDevices.getUserMedia(constraints);
