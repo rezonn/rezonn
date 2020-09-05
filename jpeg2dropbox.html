@@ -2,12 +2,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>:-webkit-full-screen {position:fixed;width:100%;height:auto;top:0;left:0;}</style>
 </head>
 <body>
 <video id="video" autoplay playsinline></video>
 <canvas id="canvas" onclick="this.webkitRequestFullscreen()"></canvas>
 <canvas id="canvas2" onclick="this.webkitRequestFullscreen()"></canvas>
-<style>:-webkit-full-screen {position:fixed;width:100%;height:auto;top:0;left:0;}</style>
 <script>
 
 function newhtml(tag,attributes,ths) {
@@ -37,14 +37,9 @@ function ascript(src){
   })
 }
 
-async function cameraId2stream(cameraId) {
-    return await navigator.mediaDevices.getUserMedia({"audio":false,"video":{"deviceId":cameraId}});
-}
-
 async function allDevices() {
   (await navigator.mediaDevices.enumerateDevices()).map(async function (device) {
     console.log(device.deviceId);
-    //video.srcObject = await cameraId2stream(device.deviceId);
     video.srcObject = await navigator.mediaDevices.getUserMedia({"audio":false,"video":{"deviceId":device.deviceId}});
   });
 }
