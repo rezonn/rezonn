@@ -45,32 +45,17 @@ async function cameraId2stream(cameraId) {
     return await navigator.mediaDevices.getUserMedia(constraints);
 }
 
-async function gotDevices() {
+async function allDevices() {
   (await navigator.mediaDevices.enumerateDevices()).map(async function (device) {
     console.log(device.deviceId);
     video.srcObject = await cameraId2stream(device.deviceId);
   });
 }
-navigator.mediaDevices.ondevicechange = gotDevices;
+navigator.mediaDevices.ondevicechange = allDevices;
 
 window.onload = async function(){
-
-  /*
-  navigator.mediaDevices.getUserMedia({video:true}).then(function (stream) {
-    video.srcObject = stream;
-  }).catch(function (error) {
-    console.log(error);
-  });
-  */
-
   await navigator.mediaDevices.getUserMedia({video:true});
-
-
-
-
-
-  gotDevices();
-
+  allDevices();
   last = Date.parse(new Date());
   if (!localStorage.getItem("dropbox")) localStorage.setItem("dropbox", prompt('Dropbox Authorization'));
   await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
@@ -133,10 +118,6 @@ async function main() {
   }
 }
 
-
-
-
-
 video.onplay = function(){
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -157,14 +138,6 @@ video.onplay = function(){
       }
   })();
 }
-
-
-
-/*
-navigator.mediaDevices.addEventListener('devicechange', event => {
-    gotDevices()
-});
-*/
 
 </script>
 </body>
