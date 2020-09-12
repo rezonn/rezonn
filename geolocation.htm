@@ -46,6 +46,16 @@ window.onload = function(){
   }, {enableHighAccuracy: true,timeout: 5000,maximumAge: 0});
 }
 
+window.ondeviceorientation = function(event) {
+  var rv;
+  if(event.webkitCompassHeading) rv = event.webkitCompassHeading;
+  else {
+    rv = event.alpha;
+    if(!window.chrome) rv = rv-270;
+  }
+  console.log(rv);
+}
+
 setInterval(window.onload,2000);
 
 </script>
