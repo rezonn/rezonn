@@ -1,0 +1,31 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>* {font-size:30}</style>
+<title>Geolocation</title>
+<script>
+
+
+function newhtml(tag,attributes,ths) {
+  var rv = document.createElement(tag);
+  for (var x in attributes) {
+    if (x!="style") rv[x] = attributes[x];
+    else {
+      for (var s in attributes[x]) {
+        rv.style[s] = attributes[x][s];
+      }
+    }
+  }
+  if (ths) ths.appendChild(rv);
+  return rv;
+}
+
+console.log = function(text) {newhtml("div",{innerText:text},document.body)}
+
+window.onload = function(){
+  
+}
+
+
+
+</script>
+<body></body>
