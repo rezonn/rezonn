@@ -2,6 +2,23 @@
 <title>Geolocation</title>
 <script>
 
+function deg_to_dms(deg) {
+   var d = Math.floor (deg);
+   var minfloat = (deg-d)*60;
+   var m = Math.floor(minfloat);
+   var secfloat = (minfloat-m)*60;
+   var s = Math.round(secfloat*10)/10;
+   if (s==60) {
+     m++;
+     s=0;
+   }
+   if (m==60) {
+     d++;
+     m=0;
+   }
+   return (d + "°" + m + "\'" + s + "\"");
+}
+
 function newhtml(tag,attributes,ths) {
   var rv = document.createElement(tag);
   for (var x in attributes) {
@@ -20,14 +37,7 @@ console.log = function(text) {newhtml("div",{innerText:text},document.body)}
 
 var options = {enableHighAccuracy:true, timeout:5000, maximumAge:0};
 
-function success(pos) {
-  var crd = pos.coords;
 
-  console.log('Ваше текущее метоположение:');
-  console.log(`Широта: ${crd.latitude}`);
-  console.log(`Долгота: ${crd.longitude}`);
-  console.log(`Плюс-минус ${crd.accuracy} метров.`);
-};
 
 function error(err) {
   console.warn(`ERROR(${err.code}): ${err.message}`);
@@ -35,8 +45,14 @@ function error(err) {
 
 
 
+
 window.onload = function(){
-  navigator.geolocation.getCurrentPosition(success, error, {enableHighAccuracy: true,timeout: 5000,maximumAge: 0});
+  if (!window.div) window.div = newhtml("div",{},document.body);
+  
+  navigator.geolocation.getCurrentPosition(function(pos){
+    window.div.innerText = deg_to_dms(pos.coords.latitude) + " " + deg_to_dms(pos.coords.longitude) + " ±" + pos.coords.accuracy;
+    console.log(pos.coords.accuracy);
+  }, error, {enableHighAccuracy: true,timeout: 5000,maximumAge: 0});
 }
 
 setInterval(window.onload,2000);
