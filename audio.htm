@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>* {font-size:30}</style>
-<title>Geolocation</title>
+<title>Audio</title>
 <script>
 
 
@@ -21,8 +21,93 @@ function newhtml(tag,attributes,ths) {
 
 console.log = function(text) {newhtml("div",{innerText:text},document.body)}
 
-window.onload = function(){
-  
+
+
+function parseAudio(stream) {
+  var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
+  var source = audioCtx.createMediaStreamSource(stream);
+  source.connect(analyser);
+
+
+  analyser.fftSize = 2048;
+  bufferLength = analyser.frequencyBinCount;
+  dataArray = new Uint8Array(bufferLength);
+  analyser.getByteTimeDomainData(dataArray);
+
+  draw(analyser,dataArray,bufferLength);
+  //analyser.connect(distortion);
+  //distortion.connect(audioCtx.destination);
+}
+
+function draw() {
+  //var dataArray = new Uint8Array(bufferLength);
+
+  var WIDTH=400; var HEIGHT = 400;
+
+  drawVisual = requestAnimationFrame(draw);
+
+  analyser.getByteTimeDomainData(dataArray);
+
+  canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+  canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  canvasCtx.lineWidth = 2;
+  canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+
+  canvasCtx.beginPath();
+
+  var sliceWidth = WIDTH * 1.0 / bufferLength;
+  var x = 0;
+
+  for(var i = 0; i < bufferLength; i++) {
+
+    var v = dataArray[i] / 128.0;
+    var y = v * HEIGHT/2;
+
+    if(i === 0) {
+      canvasCtx.moveTo(x, y);
+    } else {
+      canvasCtx.lineTo(x, y);
+    }
+
+    x += sliceWidth;
+  }
+
+  canvasCtx.lineTo(canvas.width, canvas.height/2);
+  canvasCtx.stroke();
+};
+
+
+
+async function allDevices() {
+  console.log("enumerateDevices");
+  (await navigator.mediaDevices.enumerateDevices()).map(async function (device) {
+    console.log(device.deviceId);
+    var stream = await navigator.mediaDevices.getUserMedia({"audio":true});
+    parseAudio(stream);
+    //video.srcObject = stream;
+    stream.getAudioTracks().map(function(track){
+      const capabilities = track.getCapabilities();
+      const settings = track.getSettings();
+      console.log("capabilities="+JSON.stringify(capabilities));
+      console.log("settings="+JSON.stringify(settings));
+
+    })
+  });
+}
+navigator.mediaDevices.ondevicechange = allDevices;
+
+window.onload = async function(){
+  canvas = newhtml("canvas",{width:400,height:400},document.body);
+  canvasCtx = canvas.getContext('2d');
+  try {
+    if (await navigator.mediaDevices.getUserMedia({audio:true})) allDevices();
+    else console.log("no device");
+  } catch(e) {
+    console.log(e.message);
+  };
+
 }
 
 
