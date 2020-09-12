@@ -48,9 +48,8 @@ function error(err) {
 
 window.onload = function(){
   if (!window.div) window.div = newhtml("div",{},document.body);
-  
   navigator.geolocation.getCurrentPosition(function(pos){
-    window.div.innerText = deg_to_dms(pos.coords.latitude) + " " + deg_to_dms(pos.coords.longitude) + " ±" + pos.coords.accuracy;
+    window.div.innerText = deg_to_dms(pos.coords.latitude) + "N " + deg_to_dms(pos.coords.longitude) + "E ±" + pos.coords.accuracy + "m";
     console.log(pos.coords.accuracy);
   }, error, {enableHighAccuracy: true,timeout: 5000,maximumAge: 0});
 }
