@@ -4,4 +4,4 @@
 
 [mp4 -> Youtube](https://rezonn.github.io/rezonn/)
 
-[Location] (https://rezonn.github.io/rezonn/geolocation.htm)
+[Location](https://rezonn.github.io/rezonn/geolocation.htm)
