@@ -54,6 +54,8 @@ async function allDevices() {
 }
 navigator.mediaDevices.ondevicechange = allDevices;
 
+var athome = false;
+
 window.onload = async function(){
   try {
     await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
