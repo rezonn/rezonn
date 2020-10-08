@@ -111,6 +111,7 @@ video.onplay = function(){
       }
       else {
         try {
+          if (!athome)
           await main();
         } catch(e){console.log(e.message)}
       }
@@ -139,7 +140,6 @@ async function main() {
     blob2dropbox(blob, "/home/"+dc+".jpg");
     //} catch(e){console.log("canvas.toBlob error")}
     console.log("athome="+athome);
-
     last = Date.parse(new Date());
   }
   dst.delete();
