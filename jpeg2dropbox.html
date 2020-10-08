@@ -70,7 +70,7 @@ window.onload = async function(){
   if (!localStorage.getItem("dropbox")) localStorage.setItem("dropbox", prompt('Dropbox Authorization'));
   if (!localStorage.getItem("athome")) localStorage.setItem("athome", prompt('At Home URL'));
   
-  setInterval(function(){
+  setInterval(async function(){
     var athome_date = await (await fetch(localStorage.getItem("athome"))).text();
     athome_date = Date.parse(new Date(athome_date))
     if (Date.parse(new Date()) - athome > 120000) athome = false;
