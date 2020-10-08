@@ -73,7 +73,7 @@ window.onload = async function(){
   setInterval(async function(){
     var athome_date = await (await fetch(localStorage.getItem("athome"))).text();
     athome_date = Date.parse(new Date(athome_date))
-    if (Date.parse(new Date()) - athome > 120000) athome = false;
+    if (Date.parse(new Date()) - athome_date > 120000) athome = false;
     else athome = true;
   },2000);
   
