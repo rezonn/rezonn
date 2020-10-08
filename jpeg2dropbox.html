@@ -107,8 +107,11 @@ video.onplay = function(){
       //if (!ths.paused && !ths.ended) {
       ctx.drawImage(ths, 0, 0);
       if (frames.length<keyframe+2) {
-        if (frames.length==0 || frames.length==keyframe)
-        frames.push( cv.imread(canvas) );
+        if (frames.length==0 || frames.length==keyframe) {
+          var frame0 = cv.imread(canvas);
+          if (frame0) frames.push( frame0 );
+          console.log(frame0);
+        }
         else frames.push( 0 );
       }
       else {
