@@ -110,7 +110,7 @@ video.onplay = function(){
         if (frames.length==0 || frames.length==keyframe) {
           var frame0 = cv.imread(canvas);
           if (frame0) frames.push( frame0 );
-          console.log(frame0);
+          console.log("frame0="+frame0);
         }
         else frames.push( 0 );
       }
