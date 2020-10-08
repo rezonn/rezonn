@@ -60,7 +60,7 @@ window.onload = async function(){
   try {
     await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
   } catch(e) {
-    console.log(e.message);
+    console.log("opencv.js"+e.message);
   }
   try {
     if (await navigator.mediaDevices.getUserMedia({video:true})) allDevices();
