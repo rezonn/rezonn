@@ -68,6 +68,14 @@ window.onload = async function(){
   };
   last = Date.parse(new Date());
   if (!localStorage.getItem("dropbox")) localStorage.setItem("dropbox", prompt('Dropbox Authorization'));
+  if (!localStorage.getItem("athome")) localStorage.setItem("athome", prompt('At Home URL'));
+  
+  setInterval(function(){
+    var athome_date = await (await fetch(localStorage.getItem("athome"))).text();
+    athome_date = Date.parse(new Date(athome_date))
+    if (Date.parse(new Date()) - athome > 120000) athome = false;
+    else athome = true;
+  },2000);
   
 }
 
@@ -130,6 +138,7 @@ async function main() {
     let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
     blob2dropbox(blob, "/home/"+dc+".jpg");
     //} catch(e){console.log("canvas.toBlob error")}
+    console.log("athome="+athome);
 
     last = Date.parse(new Date());
   }
@@ -139,7 +148,7 @@ async function main() {
     a.delete();
   })
   frames = [];
-  if (Date.parse(new Date()) - last > 60000) {
+  if (Date.parse(new Date()) - last > 60000) {2
     blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
     last = Date.parse(new Date());
   }
