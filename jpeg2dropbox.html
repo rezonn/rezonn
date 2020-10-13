@@ -127,6 +127,7 @@ video.onplay = function(){
       ths.frames.push(cv.imread(canvas));
     }
     if (ths.frames.length==2 && !athome) {
+      try {
       var frames = ths.frames;
       var dsize = new cv.Size(300, 300);
       cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
@@ -146,6 +147,7 @@ video.onplay = function(){
         blob2dropbox(blob, "/home/"+dc+".jpg");
         last = Date.parse(new Date());
       }
+      } catch(e) {}
       dst.delete();
       frames[0].delete();
       frames[1].delete();
