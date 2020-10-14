@@ -47,19 +47,21 @@ function ascript(src){
   })
 }
 
-async function allStreams() {
-  var devices = await navigator.mediaDevices.enumerateDevices();
+async function allStreams(type) {
+  await navigator.mediaDevices.getUserMedia({"video":true});
+  devices = await navigator.mediaDevices.enumerateDevices();
   var rv = [];
   for (var device of devices) {
-
-    for (var x in device) {
-      console.log(x+"="+device[x]);
-    }
-
-
-    //console.log("device.id="+device.id+"..."+device.deviceId)
-    var stream = await navigator.mediaDevices.getUserMedia({"video":{"deviceId":device.id}});
+    var deviceKind = type||device.kind.slice(0,-5);
+    var constraints = {};
+    constraints[deviceKind] = {"deviceId":device.deviceId};
+    var stream = {constraints:constraints}
     stream.device = device;
+    stream.constraints = constraints;
+    stream.settings = [];
+    stream.getMedia = async function() {
+      return await navigator.mediaDevices.getUserMedia(this.constraints);
+    }
     rv.push(stream);
   }
   return rv;
@@ -75,32 +77,23 @@ window.onload = async function(){
 
 
   streams = await allStreams();
-  video.srcObject = streams[0];
 
 
-  
+
+  //video.srcObject = await streams[1].getMedia();
+
+
   camlist.innerText = "";
-  var table = newhtml("table",{},camlist);
-  streams.map(async function(stream){
-    stream.getVideoTracks().map(function(track){
-      const capabilities = track.getCapabilities();
-      const settings = track.getSettings();
-      for (var x in settings) {
-        var tr = newhtml("tr",{},table);
-        newhtml("td",{innerText:x},tr);
-        var td = newhtml("td",{innerText:settings[x]},tr);
-        if (capabilities[x].max) {
-          var td2 = newhtml("td",{},tr);
-          newhtml("input",{type:"range",min:capabilities[x].min,max:capabilities[x].max,step:1,value:settings[x],oninput:function(){
-            td.innerText = this.value;
-          }},tr);
-        }
-        else td.colSpan = "2";
-      }
-    });
-  });
-
   
+  streams.map(function(stream){
+    
+    newhtml("div",{innerText:stream.device.label,stream:stream,onclick:async function(){
+      video.srcObject = await this.stream.getMedia();
+    }},camlist);
+
+
+  })
+
   last = Date.parse(new Date());
   setInterval(async function(){
     var athome_date = await (await fetch(local("athome"))).text();
@@ -109,10 +102,8 @@ window.onload = async function(){
     else athome = true;
     if (athome) console.log("at home")
   },2000);
-  
 
   console.log = function(text) {newhtml("div",{innerText:text},LOG);LOG.scrollTop = LOG.scrollHeight;}
-  
 }
 
 async function blob2dropbox(blob,filename) {
