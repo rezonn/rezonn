@@ -20,8 +20,6 @@ canvas {display:none}
 <div id="camlist"></div>
 <div id="LOG"></div>
 <canvas id="canvas"></canvas>
-<canvas id="canvas1"></canvas>
-<canvas id="canvas2"></canvas>
 <script>
 
 function newhtml(tag,attributes,ths) {
@@ -74,28 +72,6 @@ function local(tag) {
   return localStorage.getItem(tag);
 }
 
-window.onload = async function(){
-  await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
-  streams = await allStreams();
-  camlist.innerText = "";
-  streams.map(function(stream){
-    newhtml("div",{innerText:stream.device.label,stream:stream,onclick:async function(){
-      video.srcObject = await this.stream.getMedia();
-    }},camlist);
-  });
-  last = Date.parse(new Date());
-  setInterval(async function(){
-    athome = false;
-      try {
-          var athome_date = await (await fetch(local("athome"))).text();
-          athome_date = Date.parse(new Date(athome_date))
-          if (Date.parse(new Date()) - athome_date < 120000) athome = true;
-      } catch(e){}
-    if (athome) console.log("at home")
-  },10000);
-  console.log = function(text) {newhtml("div",{innerText:text},LOG);LOG.scrollTop = LOG.scrollHeight;}
-}
-
 async function blob2dropbox(blob,filename) {
   try {
     await fetch("https://content.dropboxapi.com/2/files/upload", {
@@ -112,39 +88,68 @@ async function blob2dropbox(blob,filename) {
 
 var athome = false;
 
+var cap,left,right;
+last = Date.parse(new Date());
+canvas.ctx = canvas.getContext('2d');
+
 video.onplay = function(){
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-  video.frames = [];
-  var ctx = canvas.getContext('2d');
+}
+
+async function Update() {
+  canvas.ctx.drawImage(video, 0, 0);
+  if (!left) left = cv.imread(canvas);
+  else if (!right) right = cv.imread(canvas);
+  else {
+    left.delete();
+    right.delete();
+    left=undefined;
+    right=undefined;
+  }
+  if (!athome && right && left && compare([right,left])) {
+    console.log("DETECT");
+    let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
+    var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
+    await blob2dropbox(blob, "/home/"+dc+".jpg");
+    console.log("uploaded");
+    last = Date.parse(new Date());
+  }
+}
+
+window.onload = async function(){
+  console.log = function(text) {newhtml("div",{innerText:text},LOG);LOG.scrollTop = LOG.scrollHeight;}
+  await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
+  streams = await allStreams();
+  camlist.innerText = "";
+  streams.map(function(stream){
+    newhtml("div",{innerText:stream.device.label,stream:stream,onclick:async function(){
+      video.srcObject = await this.stream.getMedia();
+    }},camlist);
+  });
+
   (async function loop() {
-    if (!video.timer) video.timer = 10;
-    else video.timer--;
-    if (video.timer==0 || video.timer==10) {
-      ctx.drawImage(video, 0, 0);
-      video.frames.push(cv.imread(canvas));
-    }
-    if (video.frames.length==2 && !athome) {
-      var equal = await compare(video.frames);
-      var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
-      if (compare(video.frames)) {
-        console.log([sorted[0],sorted[10],sorted[50]].join("_"));
-        let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-        await blob2dropbox(blob, "/home/"+dc+".jpg");
-        console.log("uploaded");
-        last = Date.parse(new Date());
-      }
-      dst.delete();
-      video.frames[0].delete();
-      video.frames[1].delete();
-      video.frames = [];
-      if (Date.parse(new Date()) - last > 60000) {2
-        await blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
-        last = Date.parse(new Date());
-      }
-    }
+    await Update();
     window.requestAnimationFrame(loop);
   })();
+
+  setInterval(async function(){
+    if (Date.parse(new Date()) - last > 60000) {2
+      await blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
+      last = Date.parse(new Date());
+    }
+  },60000);
+
+  setInterval(async function(){
+    athome = false;
+      try {
+          var athome_date = await (await fetch(local("athome"))).text();
+          athome_date = Date.parse(new Date(athome_date))
+          if (Date.parse(new Date()) - athome_date < 120000) athome = true;
+      } catch(e){}
+    if (athome) console.log("at home")
+  },10000);
+
 }
     
 function compare(frames) {
@@ -158,7 +163,6 @@ function compare(frames) {
     cv.subtract(frames[0],frames[1],dst);
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
-    //cv.imshow('canvas2', dst);
     var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
     if (sorted[0]>50) return true;
   } catch(e) {console.log("compare error: "+e.message)}
