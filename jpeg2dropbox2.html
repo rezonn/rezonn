@@ -20,6 +20,7 @@ canvas {display:none}
 <div id="camlist"></div>
 <div id="LOG"></div>
 <canvas id="canvas"></canvas>
+<canvas id="canvas1"></canvas>
 <canvas id="canvas2"></canvas>
 <script>
 
@@ -110,24 +111,24 @@ async function blob2dropbox(blob,filename) {
 }
 
 var athome = false;
+var 
 
 video.onplay = function(){
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-  var ths = this;
-  ths.frames = [];
+  video.frames = [];
   var ctx = canvas.getContext('2d');
   (async function loop() {
-    if (!ths.timer) ths.timer = 10;
-    else ths.timer--;
-    if (ths.timer==0 || ths.timer==10) {
-      ctx.drawImage(ths, 0, 0);
-      ths.frames.push(cv.imread(canvas));
+    if (!video.timer) video.timer = 10;
+    else video.timer--;
+    if (video.timer==0 || video.timer==10) {
+      ctx.drawImage(video, 0, 0);
+      video.frames.push(cv.imread(canvas));
     }
-    if (ths.frames.length==2 && !athome) {
-      var equal = await compare(ths.frames);
+    if (video.frames.length==2 && !athome) {
+      var equal = await compare(video.frames);
       var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
-      if (compare(ths.frames)) {
+      if (compare(video.frames)) {
         console.log([sorted[0],sorted[10],sorted[50]].join("_"));
         let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
         await blob2dropbox(blob, "/home/"+dc+".jpg");
@@ -135,11 +136,11 @@ video.onplay = function(){
         last = Date.parse(new Date());
       }
       dst.delete();
-      frames[0].delete();
-      frames[1].delete();
-      ths.frames = [];
+      video.frames[0].delete();
+      video.frames[1].delete();
+      video.frames = [];
       if (Date.parse(new Date()) - last > 60000) {2
-        blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
+        await blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
         last = Date.parse(new Date());
       }
     }
@@ -157,7 +158,7 @@ function compare(frames) {
   cv.subtract(frames[0],frames[1],dst);
   var dsize = new cv.Size(10, 10);
   cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
-  cv.imshow('canvas2', dst);
+  //cv.imshow('canvas2', dst);
   var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
   if (sorted[0]>50) return true;
 }
