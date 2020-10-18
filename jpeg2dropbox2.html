@@ -148,18 +148,20 @@ video.onplay = function(){
 }
     
 function compare(frames) {
-  var dsize = new cv.Size(300, 300);
-  cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
-  cv.resize(frames[0], frames[0], dsize, 0, 0, cv.INTER_LINEAR);
-  cv.cvtColor(frames[1], frames[1], cv.COLOR_RGBA2GRAY, 0);
-  cv.resize(frames[1], frames[1], dsize, 0, 0, cv.INTER_LINEAR);
-  dst = new cv.Mat();
-  cv.subtract(frames[0],frames[1],dst);
-  var dsize = new cv.Size(10, 10);
-  cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
-  //cv.imshow('canvas2', dst);
-  var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
-  if (sorted[0]>50) return true;
+  try {
+    var dsize = new cv.Size(300, 300);
+    cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
+    cv.resize(frames[0], frames[0], dsize, 0, 0, cv.INTER_LINEAR);
+    cv.cvtColor(frames[1], frames[1], cv.COLOR_RGBA2GRAY, 0);
+    cv.resize(frames[1], frames[1], dsize, 0, 0, cv.INTER_LINEAR);
+    dst = new cv.Mat();
+    cv.subtract(frames[0],frames[1],dst);
+    var dsize = new cv.Size(10, 10);
+    cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
+    //cv.imshow('canvas2', dst);
+    var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
+    if (sorted[0]>50) return true;
+  } catch(e) {console.log("compare error: "+e.message)}
 }
 
 </script>
