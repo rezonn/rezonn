@@ -127,10 +127,11 @@ video.onplay = function(){
     if (ths.frames.length==2 && !athome) {
       var equal = await compare(ths.frames);
       var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
-      if (sorted[0]>50) {
+      if (compare(ths.frames)) {
         console.log([sorted[0],sorted[10],sorted[50]].join("_"));
         let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
         await blob2dropbox(blob, "/home/"+dc+".jpg");
+        console.log("uploaded");
         last = Date.parse(new Date());
       }
       dst.delete();
