@@ -130,9 +130,11 @@ window.onload = async function(){
   last = Date.parse(new Date());
   setInterval(async function(){
     athome = false;
-    var athome_date = await (await fetch(local("athome"))).text();
-    athome_date = Date.parse(new Date(athome_date))
-    if (Date.parse(new Date()) - athome_date < 120000) athome = true;
+      try {
+          var athome_date = await (await fetch(local("athome"))).text();
+          athome_date = Date.parse(new Date(athome_date))
+          if (Date.parse(new Date()) - athome_date < 120000) athome = true;
+      } catch(e){}
     if (athome) console.log("at home")
   },10000);
 
@@ -163,7 +165,7 @@ video.onplay = function(){
   var ctx = canvas.getContext('2d');
   (async function loop() {
       
-    try {
+    //try {
     
     if (!ths.timer) ths.timer = 10;
     else ths.timer--;
@@ -201,7 +203,7 @@ video.onplay = function(){
       }
     }
         
-    } catch(e){}
+    //} catch(e){}
     
     window.requestAnimationFrame(loop);
   })();
