@@ -1,9 +1,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<style>* {font-size:30}</style>
+<style>
+#LOG {overflow-y:scroll;top:70%;height:30%;position:fixed;bottom:0;width:100%;}
+body {background:black}
+</style>
 <title>Audio</title>
+<div id="camlist"></div>
+<div id="LOG"></div>
 <script>
-
 
 function newhtml(tag,attributes,ths) {
   var rv = document.createElement(tag);
@@ -19,98 +23,73 @@ function newhtml(tag,attributes,ths) {
   return rv;
 }
 
-console.log = function(text) {newhtml("div",{innerText:text},document.body)}
+console.log = function(text) {newhtml("div",{innerText:text},LOG);LOG.scrollTop = LOG.scrollHeight;}
 
+var Y = 0;
+//var max = 0;
+//var min = 1000000;
 
+async function Update() {
+  analyser.getByteFrequencyData(fbc_array);
+  Y++;if(Y>700) Y=0;
+  for(var i=0; i<analyser.frequencyBinCount; i++) {
+    canvas2.ctx.fillStyle = 'rgb('+fbc_array[i]+','+fbc_array[i]+','+fbc_array[i]+')';
+    canvas2.ctx.fillRect(Y,i,1,1);
 
-function parseAudio(stream) {
-  var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  analyser = audioCtx.createAnalyser();
-  var source = audioCtx.createMediaStreamSource(stream);
-  source.connect(analyser);
+    //if (max<fbc_array[i]) max=fbc_array[i];
+    //if (min>fbc_array[i]) min=fbc_array[i]
 
-
-  analyser.fftSize = 2048;
-  bufferLength = analyser.frequencyBinCount;
-  dataArray = new Uint8Array(bufferLength);
-  analyser.getByteTimeDomainData(dataArray);
-
-  draw(analyser,dataArray,bufferLength);
-  //analyser.connect(distortion);
-  //distortion.connect(audioCtx.destination);
-}
-
-function draw() {
-  //var dataArray = new Uint8Array(bufferLength);
-
-  var WIDTH=400; var HEIGHT = 400;
-
-  drawVisual = requestAnimationFrame(draw);
-
-  analyser.getByteTimeDomainData(dataArray);
-
-  canvasCtx.fillStyle = 'rgb(200, 200, 200)';
-  canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
-
-  canvasCtx.lineWidth = 2;
-  canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
-
-  canvasCtx.beginPath();
-
-  var sliceWidth = WIDTH * 1.0 / bufferLength;
-  var x = 0;
-
-  for(var i = 0; i < bufferLength; i++) {
-
-    var v = dataArray[i] / 128.0;
-    var y = v * HEIGHT/2;
-
-    if(i === 0) {
-      canvasCtx.moveTo(x, y);
-    } else {
-      canvasCtx.lineTo(x, y);
-    }
-
-    x += sliceWidth;
   }
-
-  canvasCtx.lineTo(canvas.width, canvas.height/2);
-  canvasCtx.stroke();
+  //console.log([min,max].join(","));
 };
 
-
-
-async function allDevices() {
-  console.log("enumerateDevices");
-  (await navigator.mediaDevices.enumerateDevices()).map(async function (device) {
-    console.log(device.deviceId);
-    var stream = await navigator.mediaDevices.getUserMedia({"audio":true});
-    parseAudio(stream);
-    //video.srcObject = stream;
-    stream.getAudioTracks().map(function(track){
-      const capabilities = track.getCapabilities();
-      const settings = track.getSettings();
-      console.log("capabilities="+JSON.stringify(capabilities));
-      console.log("settings="+JSON.stringify(settings));
-
-    })
-  });
+async function allStreams(type) {
+  var constraints = {};
+  if (!type) type = "video";
+  constraints[type]=true;
+  await navigator.mediaDevices.getUserMedia(constraints);
+  devices = await navigator.mediaDevices.enumerateDevices();
+  var rv = [];
+  for (var device of devices) {
+    var deviceKind = type||device.kind.slice(0,-5);
+    var constraints = {};
+    constraints[deviceKind] = {"deviceId":device.deviceId};
+    var stream = {constraints:constraints}
+    stream.device = device;
+    stream.constraints = constraints;
+    stream.settings = [];
+    stream.getMedia = async function() {
+      return await navigator.mediaDevices.getUserMedia(this.constraints);
+    }
+    if (!type || type==device.kind.slice(0,-5)) rv.push(stream);
+  }
+  return rv;
 }
-navigator.mediaDevices.ondevicechange = allDevices;
 
 window.onload = async function(){
-  canvas = newhtml("canvas",{width:400,height:400},document.body);
-  canvasCtx = canvas.getContext('2d');
-  try {
-    if (await navigator.mediaDevices.getUserMedia({audio:true})) allDevices();
-    else console.log("no device");
-  } catch(e) {
-    console.log(e.message);
-  };
+
+  streams = await allStreams("audio");
+  var stream = await streams[0].getMedia();
+
+  var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
+  audioCtx.createMediaStreamSource(stream).connect(analyser);
+
+  console.log("analyser.frequencyBinCount="+analyser.frequencyBinCount);
+
+  fbc_array = new Uint8Array(analyser.frequencyBinCount);
+  
+
+  canvas2 = newhtml("canvas",{width:700,height:analyser.frequencyBinCount},document.body);
+  canvas2.ctx = canvas2.getContext('2d');
+
+  (async function loop() {
+    await Update();
+    window.requestAnimationFrame(loop);
+  })();
 
 }
 
-
-
 </script>
+
 <body></body>
