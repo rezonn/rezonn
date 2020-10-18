@@ -162,6 +162,9 @@ video.onplay = function(){
   ths.frames = [];
   var ctx = canvas.getContext('2d');
   (async function loop() {
+      
+    try {
+    
     if (!ths.timer) ths.timer = 10;
     else ths.timer--;
     if (ths.timer==0 || ths.timer==10) {
@@ -197,6 +200,8 @@ video.onplay = function(){
         last = Date.parse(new Date());
       }
     }
+        
+    } catch(e){}
     
     window.requestAnimationFrame(loop);
   })();
