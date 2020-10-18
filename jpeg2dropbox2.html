@@ -6,53 +6,21 @@
 :-webkit-full-screen {position:fixed;width:100%;height:auto;top:0;left:0;} 
 body {margin:0;background:#222;}
 * {color:#eee;}
-
 #camlist {position: absolute;z-index:3;}
 canvas {display:none}
-
-#LOG {
-
-    overflow-y:scroll;
-    top:70%;
-    height:30%;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-}
-
-.video-container {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%; 
-  overflow: hidden;
-}
-.video-container video {
-  min-width: 100%; 
-  min-height: 100%; 
-  width: auto;
-  height: auto;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%,-50%);
-}
+#LOG {overflow-y:scroll;top:70%;height:30%;position:fixed;bottom:0;width:100%;}
+.video-container {position:absolute;top:0;bottom:0;width:100%;height:100%;overflow:hidden;}
+.video-container #video {min-width:100%;min-height:100%;width:auto;height:auto;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);}
 </style>
 </head>
 <body>
-
 <div class="video-container">
   <video id="video" autoplay playsinline></video>
 </div>
-
 <div id="camlist"></div>
 <div id="LOG"></div>
-
 <canvas id="canvas"></canvas>
 <canvas id="canvas2"></canvas>
-
-
 <script>
 
 function newhtml(tag,attributes,ths) {
@@ -107,26 +75,13 @@ function local(tag) {
 
 window.onload = async function(){
   await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
-
-
   streams = await allStreams();
-
-
-
-  //video.srcObject = await streams[1].getMedia();
-
-
   camlist.innerText = "";
-  
   streams.map(function(stream){
-    
     newhtml("div",{innerText:stream.device.label,stream:stream,onclick:async function(){
       video.srcObject = await this.stream.getMedia();
     }},camlist);
-
-
-  })
-
+  });
   last = Date.parse(new Date());
   setInterval(async function(){
     athome = false;
@@ -137,7 +92,6 @@ window.onload = async function(){
       } catch(e){}
     if (athome) console.log("at home")
   },10000);
-
   console.log = function(text) {newhtml("div",{innerText:text},LOG);LOG.scrollTop = LOG.scrollHeight;}
 }
 
@@ -164,9 +118,6 @@ video.onplay = function(){
   ths.frames = [];
   var ctx = canvas.getContext('2d');
   (async function loop() {
-      
-    //try {
-    
     if (!ths.timer) ths.timer = 10;
     else ths.timer--;
     if (ths.timer==0 || ths.timer==10) {
@@ -174,23 +125,12 @@ video.onplay = function(){
       ths.frames.push(cv.imread(canvas));
     }
     if (ths.frames.length==2 && !athome) {
-      var frames = ths.frames;
-      var dsize = new cv.Size(300, 300);
-      cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
-      cv.resize(frames[0], frames[0], dsize, 0, 0, cv.INTER_LINEAR);
-      cv.cvtColor(frames[1], frames[1], cv.COLOR_RGBA2GRAY, 0);
-      cv.resize(frames[1], frames[1], dsize, 0, 0, cv.INTER_LINEAR);
-      dst = new cv.Mat();
-      cv.subtract(frames[0],frames[1],dst);
-      var dsize = new cv.Size(10, 10);
-      cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
-      cv.imshow('canvas2', dst);
-      var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
+      var equal = await compare(ths.frames);
       var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
       if (sorted[0]>50) {
         console.log([sorted[0],sorted[10],sorted[50]].join("_"));
         let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-        blob2dropbox(blob, "/home/"+dc+".jpg");
+        await blob2dropbox(blob, "/home/"+dc+".jpg");
         last = Date.parse(new Date());
       }
       dst.delete();
@@ -202,11 +142,23 @@ video.onplay = function(){
         last = Date.parse(new Date());
       }
     }
-        
-    //} catch(e){}
-    
     window.requestAnimationFrame(loop);
   })();
+}
+    
+function compare(frames) {
+  var dsize = new cv.Size(300, 300);
+  cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
+  cv.resize(frames[0], frames[0], dsize, 0, 0, cv.INTER_LINEAR);
+  cv.cvtColor(frames[1], frames[1], cv.COLOR_RGBA2GRAY, 0);
+  cv.resize(frames[1], frames[1], dsize, 0, 0, cv.INTER_LINEAR);
+  dst = new cv.Mat();
+  cv.subtract(frames[0],frames[1],dst);
+  var dsize = new cv.Size(10, 10);
+  cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
+  cv.imshow('canvas2', dst);
+  var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
+  if (sorted[0]>50) return true;
 }
 
 </script>
