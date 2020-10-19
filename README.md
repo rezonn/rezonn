@@ -2,7 +2,7 @@
 
 [Move Detection -> JPEG -> Dropbox](https://rezonn.github.io/rezonn/jpeg2dropbox2.html)
 
-[#2](https://rezonn.github.io/rezonn/moveDetector.htm)
+[#2](https://rezonn.github.io/rezonn/moveDetector.html)
 
 [mp4 -> Youtube](https://rezonn.github.io/rezonn/) not working yet
 
