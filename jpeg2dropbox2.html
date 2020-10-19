@@ -48,7 +48,10 @@ function ascript(src){
 }
 
 async function allStreams(type) {
-  await navigator.mediaDevices.getUserMedia({"video":true});
+  var constraints = {};
+  if (!type) type = "video";
+  constraints[type]=true;
+  await navigator.mediaDevices.getUserMedia(constraints);
   devices = await navigator.mediaDevices.enumerateDevices();
   var rv = [];
   for (var device of devices) {
@@ -62,7 +65,7 @@ async function allStreams(type) {
     stream.getMedia = async function() {
       return await navigator.mediaDevices.getUserMedia(this.constraints);
     }
-    rv.push(stream);
+    if (!type || type==device.kind.slice(0,-5)) rv.push(stream);
   }
   return rv;
 }
@@ -134,7 +137,8 @@ window.onload = async function(){
   })();
 
   setInterval(async function(){
-    if (Date.parse(new Date()) - last > 60000) {2
+    if (Date.parse(new Date()) - last > 60000) {
+      var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
       await blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
       last = Date.parse(new Date());
     }
