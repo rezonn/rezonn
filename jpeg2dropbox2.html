@@ -70,17 +70,12 @@ async function allStreams(type) {
   return rv;
 }
 
-function local(tag) {
-  if ( !localStorage.getItem(tag) ) localStorage.setItem(tag, prompt("Set tag ["+tag+"]"));
-  return localStorage.getItem(tag);
-}
-
 async function blob2dropbox(blob,filename) {
   try {
     await fetch("https://content.dropboxapi.com/2/files/upload", {
       method:'POST',
       headers:{
-        'Authorization':'Bearer '+local("dropbox"),
+        'Authorization':'Bearer '+localStorage.getItem("dropbox"),
         'Dropbox-API-Arg':JSON.stringify({path:filename,mode:"overwrite",autorename:true,mute:false}),
         'Content-Type':'application/octet-stream'
       },
@@ -130,6 +125,13 @@ window.onload = async function(){
       video.srcObject = await this.stream.getMedia();
     }},camlist);
   });
+  ["dropbox","athome","rotate","width","height","interval"].map(function(field){
+    newhtml("div",{innerText:field},camlist);
+    newhtml("input",{value:localStorage.getItem(field),field:field,style:{display:"block",background:"none"},onchange:function(){
+      //window[this.field] == this.value; 
+      localStorage.setItem(field, parseFloat(this.value).toString()==this.value?parseFloat(this.value):this.value);
+    }},camlist);
+  });
 
   (async function loop() {
     await Update();
@@ -147,7 +149,7 @@ window.onload = async function(){
   setInterval(async function(){
     athome = false;
       try {
-          var athome_date = await (await fetch(local("athome"))).text();
+          var athome_date = await (await fetch(localStorage.getItem("athome"))).text();
           athome_date = Date.parse(new Date(athome_date))
           if (Date.parse(new Date()) - athome_date < 120000) athome = true;
       } catch(e){}
