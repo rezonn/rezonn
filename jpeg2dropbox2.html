@@ -115,6 +115,10 @@ async function Update() {
   }
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 window.onload = async function(){
   console.log = function(text) {newhtml("div",{innerText:text},LOG);LOG.scrollTop = LOG.scrollHeight;}
   await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
@@ -125,7 +129,7 @@ window.onload = async function(){
       video.srcObject = await this.stream.getMedia();
     }},camlist);
   });
-  ["dropbox","athome","rotate","noawait"].map(function(field){
+  ["dropbox","athome","rotate","noawait","sleep"].map(function(field){
     newhtml("div",{innerText:field},camlist);
     newhtml("input",{value:localStorage.getItem(field),field:field,style:{display:"block",background:"none"},onchange:function(){
       //window[this.field] == this.value; 
@@ -160,6 +164,7 @@ window.onload = async function(){
 
   (async function loop() {
     await Update();
+    if (localStorage.getItem("sleep")>0) await sleep(localStorage.getItem("sleep"));
     window.requestAnimationFrame(loop);
   })();
 
@@ -195,7 +200,7 @@ function compare(frames) {
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
     var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
-    //console.log([0,10,20,40,100,500].map(point => sorted[point]).join(" "))
+    console.log([0,10,20,40,100,500].map(point => sorted[point]).join(" "))
     if (sorted[0]>30) return true;
   } catch(e) {console.log("compare error: "+e.message)}
 }
