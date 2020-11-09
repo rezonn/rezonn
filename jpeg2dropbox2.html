@@ -200,7 +200,7 @@ function compare(frames) {
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
     var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
-    console.log([0,10,20,40,100,500].map(point => sorted[point]).join(" "))
+    //console.log([0,10,20,40,100,500].map(point => sorted[point]).join(" "))
     if (sorted[0]>30) return true;
   } catch(e) {console.log("compare error: "+e.message)}
 }
