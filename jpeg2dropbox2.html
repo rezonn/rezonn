@@ -178,7 +178,8 @@ window.onload = async function(){
   }
 
   (async function loop() {
-    await Update();
+    if (localStorage.getItem("await")>0) await Update();
+    else Update();
     if (localStorage.getItem("sleep")>0) await sleep(localStorage.getItem("sleep"));
     window.requestAnimationFrame(loop);
   })();
