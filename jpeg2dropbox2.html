@@ -120,7 +120,7 @@ async function Update() {
     left=undefined;
     right=undefined;
   }
-  if (!athome && right && left && compare([right,left])) {
+  if (!athome && right && left && compare([right,left],localStorage.getItem("sensitivity"))) {
     console.log("DETECT");
     let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
     var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
@@ -128,6 +128,10 @@ async function Update() {
     console.log("uploaded");
     last = Date.parse(new Date());
   }
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 window.onload = async function(){
@@ -140,7 +144,7 @@ window.onload = async function(){
       video.srcObject = await this.stream.getMedia();
     }},camlist);
   });
-  ["dropbox","athome","rotate","width","height","interval"].map(function(field){
+  ["dropbox","athome","rotate","await","interval","sensitivity"].map(function(field){
     newhtml("div",{innerText:field},camlist);
     newhtml("input",{value:localStorage.getItem(field),field:field,style:{display:"block",background:"none"},onchange:function(){
       //window[this.field] == this.value; 
@@ -175,6 +179,7 @@ window.onload = async function(){
 
   (async function loop() {
     await Update();
+    if (localStorage.getItem("sleep")>0) await sleep(localStorage.getItem("sleep"));
     window.requestAnimationFrame(loop);
   })();
 
@@ -198,9 +203,10 @@ window.onload = async function(){
 
 }
     
-function compare(frames) {
+function compare(frames,sensitivity) {
+  if (!sensitivity) sensitivity = 50;
   try {
-    var dsize = new cv.Size(300, 300);
+    var dsize = new cv.Size(31, 31);
     cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
     cv.resize(frames[0], frames[0], dsize, 0, 0, cv.INTER_LINEAR);
     cv.cvtColor(frames[1], frames[1], cv.COLOR_RGBA2GRAY, 0);
@@ -210,7 +216,7 @@ function compare(frames) {
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
     var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
-    if (sorted[0]>50) return true;
+    if (sorted[0]>sensitivity) return true;
   } catch(e) {console.log("compare error: "+e.message)}
 }
 
