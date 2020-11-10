@@ -10,6 +10,9 @@ body {margin:0;background:#222;}
 canvas {display:none}
 #LOG {overflow-y:scroll;top:70%;height:30%;position:fixed;bottom:0;width:100%;}
 .video-container {position:absolute;top:0;bottom:0;width:100%;height:100%;overflow:hidden;}
+/*
+.video-container #video {min-width:100%;min-height:100%;width:auto;height:auto;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);}
+*/
 </style>
 </head>
 <body>
@@ -69,6 +72,19 @@ async function allStreams(type) {
   return rv;
 }
 
+async function dropbox2text(filename) {
+  try {
+    var resp = await fetch("https://content.dropboxapi.com/2/files/download", {
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+localStorage.getItem("dropbox"),
+        'Dropbox-API-Arg':JSON.stringify({path:filename})
+      }
+    });
+    return await resp.text();
+  } catch(e) {console.log("fetch d error: "+e.message)}
+}
+
 async function blob2dropbox(blob,filename) {
   try {
     await fetch("https://content.dropboxapi.com/2/files/upload", {
@@ -80,7 +96,7 @@ async function blob2dropbox(blob,filename) {
       },
       body:blob
     });
-  } catch(e) {console.log("fetch error: "+e.message)}
+  } catch(e) {console.log("fetch u error: "+e.message)}
 }
 
 var athome = false;
@@ -107,16 +123,11 @@ async function Update() {
   if (!athome && right && left && compare([right,left])) {
     console.log("DETECT");
     let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-    var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds(),Math.round(Math.random()*1000)].join("-");
-    if (localStorage.getItem("noawait")==1) blob2dropbox(blob, "/home/"+dc+".jpg");
-    else await blob2dropbox(blob, "/home/"+dc+".jpg");
+    var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
+    await blob2dropbox(blob, "/home/"+dc+".jpg");
     console.log("uploaded");
     last = Date.parse(new Date());
   }
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 window.onload = async function(){
@@ -129,7 +140,7 @@ window.onload = async function(){
       video.srcObject = await this.stream.getMedia();
     }},camlist);
   });
-  ["dropbox","athome","rotate","noawait","sleep"].map(function(field){
+  ["dropbox","athome","rotate","width","height","interval"].map(function(field){
     newhtml("div",{innerText:field},camlist);
     newhtml("input",{value:localStorage.getItem(field),field:field,style:{display:"block",background:"none"},onchange:function(){
       //window[this.field] == this.value; 
@@ -164,7 +175,6 @@ window.onload = async function(){
 
   (async function loop() {
     await Update();
-    if (localStorage.getItem("sleep")>0) await sleep(localStorage.getItem("sleep"));
     window.requestAnimationFrame(loop);
   })();
 
@@ -179,10 +189,10 @@ window.onload = async function(){
   setInterval(async function(){
     athome = false;
       try {
-          var athome_date = await (await fetch(localStorage.getItem("athome"))).text();
+          var athome_date = await dropbox2text("/athome.txt");
           athome_date = Date.parse(new Date(athome_date))
           if (Date.parse(new Date()) - athome_date < 120000) athome = true;
-      } catch(e){}
+      } catch(e){console.log(e.message)}
     if (athome) console.log("at home")
   },60000);
 
@@ -190,7 +200,7 @@ window.onload = async function(){
     
 function compare(frames) {
   try {
-    var dsize = new cv.Size(31, 31);
+    var dsize = new cv.Size(300, 300);
     cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
     cv.resize(frames[0], frames[0], dsize, 0, 0, cv.INTER_LINEAR);
     cv.cvtColor(frames[1], frames[1], cv.COLOR_RGBA2GRAY, 0);
@@ -200,8 +210,7 @@ function compare(frames) {
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
     var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
-    //console.log([0,10,20,40,100,500].map(point => sorted[point]).join(" "))
-    if (sorted[0]>30) return true;
+    if (sorted[0]>50) return true;
   } catch(e) {console.log("compare error: "+e.message)}
 }
 
