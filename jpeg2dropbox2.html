@@ -144,7 +144,7 @@ window.onload = async function(){
       video.srcObject = await this.stream.getMedia();
     }},camlist);
   });
-  ["dropbox","athome","rotate","await","interval","sensitivity"].map(function(field){
+  ["dropbox","rotate","await","interval","sensitivity"].map(function(field){
     newhtml("div",{innerText:field},camlist);
     newhtml("input",{value:localStorage.getItem(field),field:field,style:{display:"block",background:"none"},onchange:function(){
       //window[this.field] == this.value; 
