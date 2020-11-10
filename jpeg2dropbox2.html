@@ -208,10 +208,10 @@ function compare(frames,sensitivity) {
   if (!sensitivity) sensitivity = 50;
   try {
     var dsize = new cv.Size(31, 31);
-    cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
     cv.resize(frames[0], frames[0], dsize, 0, 0, cv.INTER_LINEAR);
-    cv.cvtColor(frames[1], frames[1], cv.COLOR_RGBA2GRAY, 0);
+    cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
     cv.resize(frames[1], frames[1], dsize, 0, 0, cv.INTER_LINEAR);
+    cv.cvtColor(frames[1], frames[1], cv.COLOR_RGBA2GRAY, 0);
     dst = new cv.Mat();
     cv.subtract(frames[0],frames[1],dst);
     var dsize = new cv.Size(10, 10);
