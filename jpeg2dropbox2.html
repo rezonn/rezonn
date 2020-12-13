@@ -216,7 +216,7 @@ function compare(frames,sensitivity) {
     cv.subtract(frames[0],frames[1],dst);
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
-    var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
+    var sorted = Array.from(dst.data).sort(function(a,b){return b-a});
     if (sorted[0]>sensitivity) {
       console.log([sorted[0],sorted[1],sorted[5],sorted[10]].join(","));
       return true;
