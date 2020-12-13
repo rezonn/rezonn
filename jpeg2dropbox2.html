@@ -123,10 +123,8 @@ async function Update() {
       console.log("uploaded");
       last = Date.parse(new Date());
     }
-    left.delete();
-    right.delete();
-    left=undefined;
-    right=undefined;
+    try {left.delete();left=undefined;}catch(e){}
+    try {right.delete();right=undefined;}catch(e){}
   }
 
 }
