@@ -217,7 +217,11 @@ function compare(frames,sensitivity) {
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
     var sorted = Array.from(dst.data).sort(function(a,b){return a-b}).reverse();
-    if (sorted[0]>sensitivity) return true;
+    if (sorted[0]>sensitivity) {
+      console.log([sorted[0],sorted[1],sorted[5]].join(","));
+      return true;
+      
+    }
   } catch(e) {console.log("compare error: "+e.message)}
 }
 
