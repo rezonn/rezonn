@@ -146,7 +146,7 @@ window.onload = async function(){
   });
   ["dropbox","rotate","await","interval","sensitivity"].map(function(field){
     var div = newhtml("div",{innerText:field},camlist);
-    newhtml("span",{innerText:field,width:50px,overflow:hidden},div);
+    newhtml("span",{innerText:field,width:"50px",overflow:"hidden"},div);
     newhtml("input",{value:localStorage.getItem(field),field:field,style:{background:"none"},onchange:function(){
       //window[this.field] == this.value; 
       localStorage.setItem(field, parseFloat(this.value).toString()==this.value?parseFloat(this.value):this.value);
