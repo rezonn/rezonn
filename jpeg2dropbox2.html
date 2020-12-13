@@ -145,11 +145,12 @@ window.onload = async function(){
     }},camlist);
   });
   ["dropbox","rotate","await","interval","sensitivity"].map(function(field){
-    newhtml("div",{innerText:field},camlist);
-    newhtml("input",{value:localStorage.getItem(field),field:field,style:{display:"block",background:"none"},onchange:function(){
+    var div = newhtml("div",{innerText:field},camlist);
+    newhtml("span",{innerText:field,width:50px,overflow:hidden},div);
+    newhtml("input",{value:localStorage.getItem(field),field:field,style:{background:"none"},onchange:function(){
       //window[this.field] == this.value; 
       localStorage.setItem(field, parseFloat(this.value).toString()==this.value?parseFloat(this.value):this.value);
-    }},camlist);
+    }},div);
   });
 
   if (localStorage.getItem("rotate")==1) {
