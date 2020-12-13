@@ -115,18 +115,19 @@ async function Update() {
   if (!left) left = cv.imread(canvas);
   else if (!right) right = cv.imread(canvas);
   else {
-    if (!athome && compare([right,left],localStorage.getItem("sensitivity"))) {
-      //console.log("DETECT");
-      let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-      var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
-      await blob2dropbox(blob, "/home/"+dc+".jpg");
-      console.log("uploaded");
-      last = Date.parse(new Date());
-    }
-    try {left.delete();left=undefined;}catch(e){}
-    try {right.delete();right=undefined;}catch(e){}
+    left.delete();
+    right.delete();
+    left=undefined;
+    right=undefined;
   }
-
+  if (!athome && right && left && compare([right,left],localStorage.getItem("sensitivity"))) {
+    //console.log("DETECT");
+    let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
+    var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
+    await blob2dropbox(blob, "/home/"+dc+".jpg");
+    console.log("uploaded");
+    last = Date.parse(new Date());
+  }
 }
 
 function sleep(ms) {
