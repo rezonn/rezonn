@@ -147,7 +147,7 @@ window.onload = async function(){
   
   var table = newhtml("table",{},camlist);
   ["dropbox","rotate","await","interval","sensitivity"].map(function(field){
-    var tr = newhtml("table",{},table);
+    var tr = newhtml("tr",{},table);
     newhtml("td",{innerText:field},tr);
     var td = newhtml("td",{},tr);
     newhtml("input",{value:localStorage.getItem(field),field:field,style:{background:"none"},onchange:function(){
