@@ -144,13 +144,15 @@ window.onload = async function(){
       video.srcObject = await this.stream.getMedia();
     }},camlist);
   });
+  
+  var table = newhtml("table",{},camlist);
   ["dropbox","rotate","await","interval","sensitivity"].map(function(field){
-    var div = newhtml("div",{},camlist);
-    newhtml("span",{innerText:field,width:"20px",display:"inline-block",overflowX:"hidden"},div);
+    var tr = newhtml("table",{},table);
+    newhtml("td",{innerText:field},tr);
+    var td = newhtml("td",{},tr);
     newhtml("input",{value:localStorage.getItem(field),field:field,style:{background:"none"},onchange:function(){
-      //window[this.field] == this.value; 
       localStorage.setItem(field, parseFloat(this.value).toString()==this.value?parseFloat(this.value):this.value);
-    }},div);
+    }},td);
   });
 
   if (localStorage.getItem("rotate")==1) {
