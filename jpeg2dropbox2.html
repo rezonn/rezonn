@@ -237,7 +237,7 @@ window.onload = async function(){
     
 function compare(frames,sensitivity) {
   if (!sensitivity) sensitivity = 50;
-  //try {
+  try {
     var dsize = new cv.Size(31, 31);
     var f0 = new cv.Mat();
     var f1 = new cv.Mat();
@@ -258,7 +258,7 @@ function compare(frames,sensitivity) {
       console.log([sorted[0],sorted[1],sorted[5],sorted[10]].join(","));
       return true;
     }
-  //} catch(e) {console.log("compare error: "+e.message)}
+  } catch(e) {console.log("compare error: "+e.message)}
 }
 
 </script>
