@@ -130,7 +130,7 @@ async function Update() {
 
         var rcanvas = newhtml("canvas",{});
         cv.imshow(rcanvas,right);
-        var blob = await (new Promise(resolve => lcanvas.toBlob(resolve)));
+        var blob = await (new Promise(resolve => rcanvas.toBlob(resolve)));
         await blob2dropbox(blob, "/home/"+dc+"_r.jpg");
 
 
