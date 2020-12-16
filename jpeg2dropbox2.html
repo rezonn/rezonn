@@ -145,8 +145,11 @@ async function Update() {
         console.log("uploaded "+dc);
         last = Date.parse(new Date());
       }
-            left.delete();
-        right.delete();
+    
+    try{   left.delete();    }catch(e){}
+    try{   right.delete();   }catch(e){}
+
+
         left=undefined;
         right=undefined;
   }
