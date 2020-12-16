@@ -112,7 +112,10 @@ video.onplay = function(){
 
 async function Update() {
   canvas.ctx.drawImage(video, 0, 0);
-  if (!left) left = cv.imread(canvas);
+  if (!left) {
+    left = cv.imread(canvas);
+    
+  }
   else if (!right) right = cv.imread(canvas);
   else {
     left.delete();
@@ -139,8 +142,8 @@ async function Update() {
     let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
     var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
     await blob2dropbox(blob, "/home/"+dc+".jpg");
-    */
     
+    */
     console.log("uploaded "+dc);
     last = Date.parse(new Date());
   }
@@ -229,19 +232,24 @@ function compare(frames,sensitivity) {
   if (!sensitivity) sensitivity = 50;
   try {
     var dsize = new cv.Size(31, 31);
-    cv.resize(frames[0], frames[0], dsize, 0, 0, cv.INTER_LINEAR);
-    cv.cvtColor(frames[0], frames[0], cv.COLOR_RGBA2GRAY, 0);
-    cv.resize(frames[1], frames[1], dsize, 0, 0, cv.INTER_LINEAR);
-    cv.cvtColor(frames[1], frames[1], cv.COLOR_RGBA2GRAY, 0);
+    var f0 = new cv.Mat();
+    var f1 = new cv.Mat();
+    cv.resize(frames[0], f0, dsize, 0, 0, cv.INTER_LINEAR);
+    cv.cvtColor(f0, f0, cv.COLOR_RGBA2GRAY, 0);
+    cv.resize(frames[1], f1, dsize, 0, 0, cv.INTER_LINEAR);
+    cv.cvtColor(f1, f1, cv.COLOR_RGBA2GRAY, 0);
     dst = new cv.Mat();
-    cv.subtract(frames[0],frames[1],dst);
+    cv.subtract(f0,f1,dst);
+    
+    f0.delete();
+    f1.delete();
+    
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
     var sorted = Array.from(dst.data).sort(function(a,b){return b-a});
     if (sorted[0]>sensitivity) {
       console.log([sorted[0],sorted[1],sorted[5],sorted[10]].join(","));
       return true;
-      
     }
   } catch(e) {console.log("compare error: "+e.message)}
 }
