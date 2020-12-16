@@ -123,6 +123,8 @@ async function Update() {
   if (!athome && right && left && compare([right,left],localStorage.getItem("sensitivity"))) {
     //console.log("DETECT");
     
+    var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
+    
     var lcanvas = newhtml("canvas",{});
     cv.imshow(lcanvas,left);
     var blob = await (new Promise(resolve => lcanvas.toBlob(resolve)));
