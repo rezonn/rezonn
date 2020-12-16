@@ -122,13 +122,29 @@ async function Update() {
   }
   if (!athome && right && left && compare([right,left],localStorage.getItem("sensitivity"))) {
     //console.log("DETECT");
+    
+    var lcanvas = newhtml("canvas",{});
+    cv.imshow(lcanvas,left);
+    var blob = await (new Promise(resolve => lcanvas.toBlob(resolve)));
+    await blob2dropbox(blob, "/home/"+dc+"_l.jpg");
+    
+    var rcanvas = newhtml("canvas",{});
+    cv.imshow(rcanvas,right);
+    var blob = await (new Promise(resolve => lcanvas.toBlob(resolve)));
+    await blob2dropbox(blob, "/home/"+dc+"_r.jpg");
+    
+    /*
     let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
     var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
     await blob2dropbox(blob, "/home/"+dc+".jpg");
-    console.log("uploaded");
+    */
+    
+    console.log("uploaded "+dc);
     last = Date.parse(new Date());
   }
 }
+
+
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
