@@ -118,10 +118,7 @@ async function Update() {
   }
   else if (!right) right = cv.imread(canvas);
   else {
-    left.delete();
-    right.delete();
-    left=undefined;
-    right=undefined;
+    
   }
   if (!athome && right && left && compare([right,left],localStorage.getItem("sensitivity"))) {
     //console.log("DETECT");
@@ -137,6 +134,12 @@ async function Update() {
     cv.imshow(rcanvas,right);
     var blob = await (new Promise(resolve => lcanvas.toBlob(resolve)));
     await blob2dropbox(blob, "/home/"+dc+"_r.jpg");
+    
+    
+    left.delete();
+    right.delete();
+    left=undefined;
+    right=undefined;
     
     /*
     let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
