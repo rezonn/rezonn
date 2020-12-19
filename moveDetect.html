@@ -284,7 +284,17 @@ function detectEye(htmlImg) {
           w=rect.width;
           h=rect.height;
         }
-    }    
+    }
+
+    x -= Math.round(w/3);
+    y -= Math.round(h/3);
+    w += Math.round(w/3*2);
+    h += Math.round(h/3*2);
+    if (x<0) x=0;
+    if (y<0) y=0;
+    if (x+w>htmlImg.width) w=htmlImg.width-x-1;
+    if (y+h>htmlImg.height) h=htmlImg.height-y-1;    
+
   } catch(e){console.log(e.message)}
   src.delete();
   return [x,y,w,h];
