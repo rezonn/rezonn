@@ -93,7 +93,7 @@ async function dropbox2text(filename) {
 
 async function blob2dropbox(blob,filename) {
   try {
-    await fetch("https://content.dropboxapi.com/2/files/upload", {
+    return await fetch("https://content.dropboxapi.com/2/files/upload", {
       method:'POST',
       headers:{
         'Authorization':'Bearer '+localStorage.getItem("dropbox"),
@@ -186,8 +186,8 @@ window.onload = async function(){
   if (localStorage.getItem("eye")) {
     setInterval(async function(){
       eyerect = detectEye(canvas);
-      //console.log("eyerect="+eyerect);
-    },45000);
+      console.log("eyerect="+eyerect);
+    },1000);
   }
 
   setInterval(async function(){
@@ -218,8 +218,10 @@ async function Update() {
       let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
       var dc = new Date();
       dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds(),Math.round(Math.random()*100)].join("-");
-      await blob2dropbox(blob, "/home/"+dc+".jpg");
-      console.log("uploaded "+dc);
+      //await blob2dropbox(blob, "/home/"+dc+".jpg");
+      var resp = await (await blob2dropbox(blob, "/home/"+dc+".jpg")).text();
+      resp = resp.slice(0,10)+"..."+resp.slice(-10,-1)
+      console.log("uploaded "+dc+" >> "+resp);
       last = Date.parse(new Date());    
     }
     if (left) {
@@ -234,6 +236,7 @@ async function Update() {
 }
 
 function detectEye(htmlImg) {
+
   let src = cv.imread(htmlImg);
   cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
   cv.threshold(src, src, 35, 255, cv.THRESH_BINARY);
