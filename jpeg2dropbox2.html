@@ -214,15 +214,20 @@ async function Update() {
       left = left.roi(new cv.Rect(x, y, w, h));
     }
 
-    if (!athome && compare([right,left],localStorage.getItem("sensitivity"))) {
+    var ismotion = await compare([right,left],localStorage.getItem("sensitivity"));
+
+    if (!athome && ismotion) {
       let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
       var dc = new Date();
       dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds(),Math.round(Math.random()*100)].join("-");
-      //await blob2dropbox(blob, "/home/"+dc+".jpg");
+
+      /*
       var resp = await (await blob2dropbox(blob, "/home/"+dc+".jpg")).text();
       resp = resp.slice(0,10)+"..."+resp.slice(-10,-1)
       console.log("uploaded "+dc+" >> "+resp);
-      last = Date.parse(new Date());    
+      last = Date.parse(new Date());
+      */
+
     }
     if (left) {
       left.delete();
@@ -236,7 +241,6 @@ async function Update() {
 }
 
 function detectEye(htmlImg) {
-
   let src = cv.imread(htmlImg);
   cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
   cv.threshold(src, src, 35, 255, cv.THRESH_BINARY);
@@ -258,8 +262,21 @@ function detectEye(htmlImg) {
   src.delete();
   return [x,y,w,h];
 }
+
+function removenode(node) {
+  //node.parentNode.removeNode(node);
+  node.parentNode.removeChild(node);
+}
+
+async function sendMat(mat,name) {
+  if (!name) name = "/home/"+Math.round(Math.random()*100)+".jpg";
+  var temp = newhtml("canvas",{});
+  cv.imshow(temp, mat);
+  let blob = await (new Promise(resolve => temp.toBlob(resolve)));
+  blob2dropbox(blob, name);
+}
     
-function compare(frames,sensitivity) {
+async function compare(frames,sensitivity) {
   if (!sensitivity) sensitivity = 50;
   try {
 
@@ -273,6 +290,9 @@ function compare(frames,sensitivity) {
     cv.cvtColor(r, r, cv.COLOR_RGBA2GRAY, 0);
     dst = new cv.Mat();
     cv.subtract(l,r,dst);
+
+    await sendMat(l);
+
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
     var sorted = Array.from(dst.data).sort(function(a,b){return b-a});
