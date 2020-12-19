@@ -217,7 +217,7 @@ async function Update() {
     if (!athome && compare([right,left],localStorage.getItem("sensitivity"))) {
       let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
       var dc = new Date();
-      dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getMinutes()].join("-");
+      dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds(),Math.round(Math.random()*100)].join("-");
       await blob2dropbox(blob, "/home/"+dc+".jpg");
       console.log("uploaded "+dc);
       last = Date.parse(new Date());    
