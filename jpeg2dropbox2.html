@@ -284,15 +284,15 @@ async function Update() {
 function detectEye(htmlImg) {
   var x=0,y=0,w=htmlImg.width-1,h=htmlImg.height-1;
   let src = new cv.Mat();
+  let hierarchy = new cv.Mat();
+  let contours = new cv.MatVector();
   try {
     src = cv.imread(htmlImg);
     cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
     cv.threshold(src, src, 35, 255, cv.THRESH_BINARY);
-    let contours = new cv.MatVector();
-    let hierarchy = new cv.Mat();
     cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
     var x=0,y=0,h=0,w=0,s=0;
-    for (let i = 0; i < contours.size(); ++i) {
+    for (let i = 0; i < contours.size(); i++) {
         let cnt = contours.get(i);
         let rect = cv.boundingRect(cnt);
         if (s<rect.width*rect.height) {
@@ -313,6 +313,8 @@ function detectEye(htmlImg) {
     if (y+h>htmlImg.height) h=htmlImg.height-y-1;
   } catch(e){console.log("detectEye "+e.message)}
   src.delete();
+  hierarchy.delete();
+  contours.delete();
   return [x,y,w,h];
 }
 
