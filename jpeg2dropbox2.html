@@ -314,7 +314,7 @@ async function compare(frames,sensitivity,resize) {
 
     dc = new Date();
     dc = [dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds(),dc.getMilliseconds()].join("-");
-    await sendMat(r,"/home/"+dc+"_m.jpg");
+    //await sendMat(r,"/home/"+dc+"_m.jpg");
 
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
