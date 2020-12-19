@@ -236,7 +236,7 @@ window.onload = async function(){
           var athome_date = await dropbox2text("/athome.txt");
           athome_date = Date.parse(new Date(athome_date))
           if (Date.parse(new Date()) - athome_date < 120000) athome = true;
-      } catch(e){console.log(e.message)}
+      } catch(e){console.log("setInterval athome "+e.message)}
     if (athome) post("athome",athome)
   },60000);
 
@@ -311,7 +311,7 @@ function detectEye(htmlImg) {
     if (y<0) y=0;
     if (x+w>htmlImg.width) w=htmlImg.width-x-1;
     if (y+h>htmlImg.height) h=htmlImg.height-y-1;
-  } catch(e){console.log(e.message)}
+  } catch(e){console.log("detectEye "+e.message)}
   src.delete();
   return [x,y,w,h];
 }
@@ -325,7 +325,7 @@ async function sendMat(mat,name) {
   let blob = await (new Promise(resolve => temp.toBlob(resolve)));
   var resp = await (await blob2dropbox(blob, name)).text();
   resp = resp.slice(0,10)+"..."+resp.slice(-10);
-  console.log(resp);
+  console.log("sendMat "+resp);
 }
     
 async function compare(frames,sensitivity,resize) {
@@ -345,7 +345,7 @@ async function compare(frames,sensitivity,resize) {
     sensitivity = sensitivity * (resize*resize/31/31);
     post("moving",sorted[0])
     if (sorted[0]>sensitivity) {
-      console.log([sorted[0],sorted[1],sorted[10]].join(".."));
+      console.log("sens "+[sorted[0],sorted[1],sorted[10]].join(".."));
       return true;
     }
   } catch(e) {console.log("compare error: "+e.message)}
