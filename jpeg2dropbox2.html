@@ -19,6 +19,7 @@ canvas {display:none}
 <div class="video-container">
   <video id="video" autoplay playsinline></video>
 </div>
+
 <div id="camlist"></div>
 <div id="LOG"></div>
 <!--
@@ -107,7 +108,7 @@ async function blob2dropbox(blob,filename) {
 
 var athome = false;
 //var cap,left,right;
-var left,right,eyerect;
+var left,right,eyerect,status;
 last = Date.parse(new Date());
 //canvas.ctx = canvas.getContext('2d');
 
@@ -138,14 +139,18 @@ window.onload = async function(){
   });
   
   var table = newhtml("table",{},camlist);
-  ["dropbox","rotate","await","interval","sensitivity","eye"].map(function(field){
+  ["dropbox","rotate","await","interval","sensitivity","eye","resize"].map(function(field){
     var tr = newhtml("tr",{},table);
     newhtml("td",{innerText:field},tr);
     var td = newhtml("td",{},tr);
     newhtml("input",{value:localStorage.getItem(field),field:field,style:{background:"none"},onchange:function(){
-      localStorage.setItem(field, parseFloat(this.value).toString()==this.value?parseFloat(this.value):this.value);
+      var v = this.value;
+      var n = parseFloat(v);
+      localStorage.setItem(field, (n+"")==v?n:v);
+
     }},td);
   });
+  status = newhtml("div",{id:"status",innerText:"888"},camlist);
   
 
   if (localStorage.getItem("rotate")==1) {
@@ -169,9 +174,11 @@ window.onload = async function(){
   video.style.objectFit = "cover";
 
   (async function loop() {
-    if (localStorage.getItem("await")>0) await Update();
-    else Update();
-    if (localStorage.getItem("sleep")>0) await sleep(localStorage.getItem("sleep"));
+    //status.innerText = JSON.stringify({athome:athome});
+    //if (localStorage.getItem("await")>0) 
+      await Update();
+    //else Update();
+    if (localStorage.getItem("interval")>0) await sleep(localStorage.getItem("interval"));
     window.requestAnimationFrame(loop);
   })();
 
@@ -183,10 +190,10 @@ window.onload = async function(){
     }
   },60000);
 
-  if (localStorage.getItem("eye")) {
+  if (localStorage.getItem("eye")==1) {
     setInterval(async function(){
       eyerect = detectEye(canvas);
-      //console.log("eyerect="+eyerect);
+      console.log("eyerect="+eyerect);
     },1000);
   }
 
@@ -203,41 +210,49 @@ window.onload = async function(){
 }
 
 async function Update() {
-  canvas.ctx.drawImage(video, 0, 0);
-  if (!left) left = cv.imread(canvas);
-  else if (!right) right = cv.imread(canvas);
-  if (right && left) {
+  try {
+    //status.innerText="0111";
 
-    if (localStorage.getItem("eye") && eyerect) {
-      [x,y,w,h] = eyerect;
-      right = right.roi(new cv.Rect(x, y, w, h));
-      left = left.roi(new cv.Rect(x, y, w, h));
+    //console.log("oio");
+
+
+    canvas.ctx.drawImage(video, 0, 0);
+    if (!left) left = cv.imread(canvas);
+    else if (!right) right = cv.imread(canvas);
+    if (right && left) {
+
+      if (localStorage.getItem("eye") && eyerect) {
+        [x,y,w,h] = eyerect;
+        right = right.roi(new cv.Rect(x, y, w, h));
+        left = left.roi(new cv.Rect(x, y, w, h));
+      }
+
+      var ismotion = await compare(
+        [right,left],
+        localStorage.getItem("sensitivity"),
+        parseFloat(localStorage.getItem("resize"))
+      );
+
+      if (!athome && ismotion) {
+        var dc = new Date();
+        dc = [dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds(),dc.getMilliseconds()].join("-");
+        var resp = await sendMat(left,"/home/"+dc+"_l.jpg");
+        resp = resp.slice(0,10)+"..."+resp.slice(-10);
+        console.log("uploaded "+dc+" >> "+resp);
+        await sendMat(right,"/home/"+dc+"_r.jpg");
+        last = Date.parse(new Date());
+      }
+      if (left) {
+        left.delete();
+        left=undefined;
+      }
+      if (right) {
+        right.delete();
+        right=undefined;
+      }
     }
-
-    var ismotion = await compare([right,left],localStorage.getItem("sensitivity"));
-
-    if (!athome && ismotion) {
-      let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-      var dc = new Date();
-      dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds(),Math.round(Math.random()*100)].join("-");
-
-      /*
-      var resp = await (await blob2dropbox(blob, "/home/"+dc+".jpg")).text();
-      resp = resp.slice(0,10)+"..."+resp.slice(-10,-1)
-      console.log("uploaded "+dc+" >> "+resp);
-      last = Date.parse(new Date());
-      */
-
-    }
-    if (left) {
-      left.delete();
-      left=undefined;
-    }
-    if (right) {
-      right.delete();
-      right=undefined;
-    }
-  }
+  } catch(e){console.log("k;kn;on")}
+ 
 }
 
 function detectEye(htmlImg) {
@@ -273,25 +288,33 @@ async function sendMat(mat,name) {
   var temp = newhtml("canvas",{});
   cv.imshow(temp, mat);
   let blob = await (new Promise(resolve => temp.toBlob(resolve)));
-  blob2dropbox(blob, name);
+  //return await blob2dropbox(blob, name);
+  return await (await blob2dropbox(blob, name)).text();
 }
     
-async function compare(frames,sensitivity) {
-  if (!sensitivity) sensitivity = 50;
+async function compare(frames,sensitivity,resize) {
+  //if (!sensitivity) sensitivity = 50;
   try {
+
+    //var resize = parseFloat(resize)||51;
 
     var l = new cv.Mat();
     var r = new cv.Mat();
 
-    var dsize = new cv.Size(31, 31);
+    //console.log("resize="+resize);
+    
+    var dsize = new cv.Size(resize, resize);
     cv.resize(frames[0], l, dsize, 0, 0, cv.INTER_LINEAR);
     cv.cvtColor(l, l, cv.COLOR_RGBA2GRAY, 0);
     cv.resize(frames[1], r, dsize, 0, 0, cv.INTER_LINEAR);
     cv.cvtColor(r, r, cv.COLOR_RGBA2GRAY, 0);
+
     dst = new cv.Mat();
     cv.subtract(l,r,dst);
 
-    await sendMat(l);
+    dc = new Date();
+    dc = [dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds(),dc.getMilliseconds()].join("-");
+    await sendMat(r,"/home/"+dc+"_m.jpg");
 
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
@@ -301,10 +324,13 @@ async function compare(frames,sensitivity) {
     l.delete();
     r.delete();
 
+    sensitivity = sensitivity * (resize*resize/31/31);
+
     if (sorted[0]>sensitivity) {
-      console.log([sorted[0],sorted[1],sorted[5],sorted[10]].join(","));
+      console.log([sorted[0],sorted[1],sorted[10]].join(".."));
       return true;
     }
+
   } catch(e) {console.log("compare error: "+e.message)}
 }
 
