@@ -1,9 +1,43 @@
+<html>
+<head>
 <meta charset="utf-8">
-<title>MediaRecorder</title>
-<div id="LOG" style="overflow-y:scroll;top:70%;height:30%;position:fixed;bottom:0;width:100%;"></div>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:-webkit-full-screen {position:fixed;width:100%;height:auto;top:0;left:0;} 
+body {margin:0;background:#222;}
+* {color:#eee;}
+#camlist {position: absolute;z-index:3;}
+canvas {display:none}
+#LOG {overflow-y:scroll;top:70%;height:30%;position:fixed;bottom:0;width:100%;}
+.video-container {position:absolute;top:0;bottom:0;width:100%;height:100%;overflow:hidden;}
+/*
+.video-container #video {min-width:100%;min-height:100%;width:auto;height:auto;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);}
+*/
+</style>
+</head>
+<body>
+<div class="video-container">
+  <video id="video" autoplay playsinline></video>
+</div>
+
+<div id="camlist"></div>
+<div id="LOG"></div>
+<!--
+<canvas id="canvas"></canvas>
+-->
 <script>
 
-console.log = function(text) {newhtml("div",{innerText:text},LOG);LOG.scrollTop = LOG.scrollHeight;}
+statu = newhtml("div",{innerText:""},camlist);
+statu.data = {};
+post = function(tag,value){
+  var str = [];
+  statu.data[tag]=value;
+  for (var x in statu.data) {
+    if (typeof(statu.data[x])!="function") str.push(x+":"+statu.data[x]);
+  }
+
+  statu.innerText = str.join("\n");
+}
 
 function newhtml(tag,attributes,ths) {
   var rv = document.createElement(tag);
@@ -15,12 +49,59 @@ function newhtml(tag,attributes,ths) {
       }
     }
   }
+  if (tag=="canvas") {
+    rv.ctx = rv.getContext("2d");
+    rv.ctx.canvas = rv;
+  }
   if (ths) ths.appendChild(rv);
   return rv;
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+function ascript(src){
+  return new Promise((resolve, reject) => {
+    let script2 = document.createElement('script');
+    script2.async = true;
+    script2.onload = function() {resolve(script2)}
+    script2.onerror = reject;
+    script2.src = src;
+    document.head.appendChild(script2);
+  })
+}
+
+async function allStreams(type) {
+  var constraints = {};
+  if (!type) type = "video";
+  constraints[type]=true;
+  await navigator.mediaDevices.getUserMedia(constraints);
+  devices = await navigator.mediaDevices.enumerateDevices();
+  var rv = [];
+  for (var device of devices) {
+    var deviceKind = type||device.kind.slice(0,-5);
+    var constraints = {};
+    constraints[deviceKind] = {"deviceId":device.deviceId};
+    var stream = {constraints:constraints}
+    stream.device = device;
+    stream.constraints = constraints;
+    stream.settings = [];
+    stream.getMedia = async function() {
+      return await navigator.mediaDevices.getUserMedia(this.constraints);
+    }
+    if (!type || type==device.kind.slice(0,-5)) rv.push(stream);
+  }
+  return rv;
+}
+
+async function dropbox2text(filename) {
+  try {
+    var resp = await fetch("https://content.dropboxapi.com/2/files/download", {
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+localStorage.getItem("dropbox"),
+        'Dropbox-API-Arg':JSON.stringify({path:filename})
+      }
+    });
+    return await resp.text();
+  } catch(e) {console.log("fetch d error: "+e.message)}
 }
 
 async function blob2dropbox(blob,filename) {
@@ -37,48 +118,223 @@ async function blob2dropbox(blob,filename) {
   } catch(e) {console.log("fetch u error: "+e.message)}
 }
 
-function stop_blob(Recorder) {
-  return new Promise((resolve, reject) => {
-    Recorder.ondataavailable = function(e) {resolve(e.data)}
-    Recorder.onerror = reject;
-    Recorder.stop();
-  })
+var athome = false;
+//var cap,left,right;
+var left,right,eyerect;
+last = Date.parse(new Date());
+//canvas.ctx = canvas.getContext('2d');
+
+video.onplay = function(){
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 window.onload = async function(){
-  var display = newhtml("video",{autoplay:true,muted:true,playsinline:true,onclick:async function () {
-    if (!this.isrec) {
-      this.isrec = true;
-      recorder = new MediaRecorder(this.srcObject);
-      recorder.start();
-    }
-    else {
-      this.isrec = false;
-      //var url = window.URL.createObjectURL(await stop_blob(recorder));
+  canvas = newhtml("canvas");
 
-      var videoblob = await stop_blob(recorder);
-      var size = videoblob.size
-      console.log(size);
-      if (size>0) {
-        var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
-        blob2dropbox(videoblob,"/home2/"+dc+".mp4");
-      }
+  //lcanvas = newhtml("canvas");
+  //rcanvas = newhtml("canvas");
 
 
-      //newhtml("video",{src:url,controls:true,style:{display:"block"}},document.body);
-      //newhtml("a",{href:url,download:Date.parse(new Date())+".webm",innerText:"download",style:{display:"block"}},document.body);
-    }
-  }},document.body);
-  display.srcObject = await navigator.mediaDevices.getUserMedia({audio:true, video:true});
-  newhtml("div",{innerText:"click video to start/stop"},document.body);
+  console.log = function(text) {newhtml("div",{innerText:text},LOG);LOG.scrollTop = LOG.scrollHeight;}
+  await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
+  streams = await allStreams();
+  //camlist.innerText = "";
+  streams.map(function(stream){
+    newhtml("div",{innerText:stream.device.label,stream:stream,onclick:async function(){
+      video.srcObject = await this.stream.getMedia();
+    }},camlist);
+  });
+  
+  var table = newhtml("table",{},camlist);
+  ["dropbox","rotate","await","interval","sensitivity","eye","resize"].map(function(field){
+    var tr = newhtml("tr",{},table);
+    newhtml("td",{innerText:field},tr);
+    var td = newhtml("td",{},tr);
+    newhtml("input",{value:localStorage.getItem(field),field:field,style:{background:"none"},onchange:function(){
+      var v = this.value;
+      var n = parseFloat(v);
+      localStorage.setItem(field, (n+"")==v?n:v);
 
-  while (true) {
-    display.click();
-    await sleep(60000);
-    display.click();
+    }},td);
+  });
+  
+  
+
+  if (localStorage.getItem("rotate")==1) {
+    video.style.transform = "rotate(90deg)";
+    video.style.transformOrigin = "bottom left";
+    video.style.width = "100vh";
+    video.style.height = "100vw";
+    video.style.marginTop = "-100vw";
   }
+  if (localStorage.getItem("rotate")==0) {
+    video.style.width = "100vw";
+    video.style.height = "100vh";
+  }
+  if (localStorage.getItem("rotate")==-1) {
+    video.style.transform = "rotate(-90deg)";
+    video.style.transformOrigin = "top left";
+    video.style.width = "100vh";
+    video.style.height = "100vw";
+    video.style.marginTop = "100vh";
+  }
+  video.style.objectFit = "cover";
+
+  (async function loop() {
+
+    //post("loop","ok");
+
+    //status.innerText = JSON.stringify({athome:athome});
+    //if (localStorage.getItem("await")>0) 
+    await Update();
+    //else Update();
+    if (localStorage.getItem("interval")>0) await sleep(localStorage.getItem("interval"));
+    window.requestAnimationFrame(loop);
+  })();
+
+  setInterval(async function(){
+    if (Date.parse(new Date()) - last > 60000) {
+      var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
+      await blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
+      last = Date.parse(new Date());
+    }
+  },60000);
+
+  if (localStorage.getItem("eye")==1) {
+    setInterval(async function(){
+      eyerect = detectEye(canvas);
+      post("eyerect",eyerect);
+    },1000);
+  }
+
+  setInterval(async function(){
+    athome = false;
+      try {
+          var athome_date = await dropbox2text("/athome.txt");
+          athome_date = Date.parse(new Date(athome_date))
+          if (Date.parse(new Date()) - athome_date < 120000) athome = true;
+      } catch(e){console.log(e.message)}
+    if (athome) post("athome",athome)
+  },60000);
 
 }
 
+async function Update() {
+  try {
+    canvas.ctx.drawImage(video, 0, 0);
+    if (!left) left = cv.imread(canvas);
+    else if (!right) right = cv.imread(canvas);
+    if (right && left) {
+
+      if (localStorage.getItem("eye") && eyerect) {
+        [x,y,w,h] = eyerect;
+        right = right.roi(new cv.Rect(x, y, w, h));
+        left = left.roi(new cv.Rect(x, y, w, h));
+      }
+
+      var ismotion = await compare(
+        [right,left],
+        localStorage.getItem("sensitivity"),
+        parseFloat(localStorage.getItem("resize"))
+      );
+
+      if (!athome && ismotion) {
+        var dc = new Date();
+        dc = [dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds(),dc.getMilliseconds()].join("-");
+        sendMat(left,"l");
+        sendMat(right,"r");
+        last = Date.parse(new Date());
+      }
+      if (left) {
+        left.delete();
+        left=undefined;
+      }
+      if (right) {
+        right.delete();
+        right=undefined;
+      }
+    }
+  } catch(e){console.log("Update error "+e.message)}
+ 
+}
+
+function detectEye(htmlImg) {
+  var x=0,y=0,w=htmlImg.width,h=htmlImg.height;
+  let src = new cv.Mat();
+  try {
+    src = cv.imread(htmlImg);
+    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+    cv.threshold(src, src, 35, 255, cv.THRESH_BINARY);
+    let contours = new cv.MatVector();
+    let hierarchy = new cv.Mat();
+    cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+    var x=0,y=0,h=0,w=0,s=0;
+    for (let i = 0; i < contours.size(); ++i) {
+        let cnt = contours.get(i);
+        let rect = cv.boundingRect(cnt);
+        if (s<rect.width*rect.height) {
+          s=rect.width*rect.height;
+          x=rect.x;
+          y=rect.y;
+          w=rect.width;
+          h=rect.height;
+        }
+    }    
+  } catch(e){console.log(e.message)}
+  src.delete();
+  return [x,y,w,h];
+}
+
+function removenode(node) {
+  //node.parentNode.removeNode(node);
+  node.parentNode.removeChild(node);
+}
+
+async function sendMat(mat,name) {
+  dc = new Date();
+  dc = [dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds(),dc.getMilliseconds()].join("-");
+  name = "/home/"+dc+"_"+name+".jpg";
+  var temp = newhtml("canvas",{});
+  cv.imshow(temp, mat);
+  let blob = await (new Promise(resolve => temp.toBlob(resolve)));
+  var resp = await (await blob2dropbox(blob, name)).text();
+  resp = resp.slice(0,10)+"..."+resp.slice(-10);
+  console.log(resp);
+  //return resp;
+}
+    
+async function compare(frames,sensitivity,resize) {
+  var l = new cv.Mat();
+  var r = new cv.Mat();
+  var dst = new cv.Mat();
+  try {
+    var dsize = new cv.Size(resize, resize);
+    cv.resize(frames[0], l, dsize, 0, 0, cv.INTER_LINEAR);
+    cv.cvtColor(l, l, cv.COLOR_RGBA2GRAY, 0);
+    cv.resize(frames[1], r, dsize, 0, 0, cv.INTER_LINEAR);
+    cv.cvtColor(r, r, cv.COLOR_RGBA2GRAY, 0);
+    cv.subtract(l,r,dst);
+    //await sendMat(r,"m");
+    var dsize = new cv.Size(10, 10);
+    cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
+    var sorted = Array.from(dst.data).sort(function(a,b){return b-a});
+    sensitivity = sensitivity * (resize*resize/31/31);
+    post("moving",sorted[0])
+    if (sorted[0]>sensitivity) {
+      console.log([sorted[0],sorted[1],sorted[10]].join(".."));
+      return true;
+    }
+  } catch(e) {console.log("compare error: "+e.message)}
+  dst.delete();
+  l.delete();
+  r.delete();
+}
+
 </script>
-<body></body>
+</body>
+</html>
