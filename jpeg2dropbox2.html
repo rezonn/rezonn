@@ -21,7 +21,9 @@ canvas {display:none}
 </div>
 <div id="camlist"></div>
 <div id="LOG"></div>
+<!--
 <canvas id="canvas"></canvas>
+-->
 <script>
 
 function newhtml(tag,attributes,ths) {
@@ -33,6 +35,10 @@ function newhtml(tag,attributes,ths) {
         rv.style[s] = attributes[x][s];
       }
     }
+  }
+  if (tag=="canvas") {
+    rv.ctx = rv.getContext("2d");
+    rv.ctx.canvas = rv;
   }
   if (ths) ths.appendChild(rv);
   return rv;
@@ -100,69 +106,27 @@ async function blob2dropbox(blob,filename) {
 }
 
 var athome = false;
-
-var cap,left,right;
+//var cap,left,right;
+var left,right;
 last = Date.parse(new Date());
-canvas.ctx = canvas.getContext('2d');
+//canvas.ctx = canvas.getContext('2d');
 
 video.onplay = function(){
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
 }
 
-async function Update() {
-  canvas.ctx.drawImage(video, 0, 0);
-  if (!left) {
-    left = cv.imread(canvas);
-    
-  }
-  else if (!right) right = cv.imread(canvas);
-  else {
-    if (!athome && compare([right,left],localStorage.getItem("sensitivity"))) {
-        //console.log("DETECT");
-
-        var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
-
-        var lcanvas = newhtml("canvas",{});
-        cv.imshow(lcanvas,left);
-        var blob = await (new Promise(resolve => lcanvas.toBlob(resolve)));
-        await blob2dropbox(blob, "/home/"+dc+"_l.jpg");
-
-        var rcanvas = newhtml("canvas",{});
-        cv.imshow(rcanvas,right);
-        var blob = await (new Promise(resolve => rcanvas.toBlob(resolve)));
-        await blob2dropbox(blob, "/home/"+dc+"_r.jpg");
-
-
-
-
-        /*
-        let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
-        var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
-        await blob2dropbox(blob, "/home/"+dc+".jpg");
-
-        */
-        console.log("uploaded "+dc);
-        last = Date.parse(new Date());
-      }
-    
-    try{   left.delete();    }catch(e){}
-    try{   right.delete();   }catch(e){}
-
-
-        left=undefined;
-        right=undefined;
-  }
-  
-}
-
-
-
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 window.onload = async function(){
+  canvas = newhtml("canvas");
+
+  //lcanvas = newhtml("canvas");
+  //rcanvas = newhtml("canvas");
+
+
   console.log = function(text) {newhtml("div",{innerText:text},LOG);LOG.scrollTop = LOG.scrollHeight;}
   await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
   streams = await allStreams();
@@ -174,7 +138,7 @@ window.onload = async function(){
   });
   
   var table = newhtml("table",{},camlist);
-  ["dropbox","rotate","await","interval","sensitivity"].map(function(field){
+  ["dropbox","rotate","await","interval","sensitivity","eye"].map(function(field){
     var tr = newhtml("tr",{},table);
     newhtml("td",{innerText:field},tr);
     var td = newhtml("td",{},tr);
@@ -182,6 +146,7 @@ window.onload = async function(){
       localStorage.setItem(field, parseFloat(this.value).toString()==this.value?parseFloat(this.value):this.value);
     }},td);
   });
+  
 
   if (localStorage.getItem("rotate")==1) {
     video.style.transform = "rotate(90deg)";
@@ -189,15 +154,10 @@ window.onload = async function(){
     video.style.width = "100vh";
     video.style.height = "100vw";
     video.style.marginTop = "-100vw";
-    video.style.objectFit = "cover";
   }
   if (localStorage.getItem("rotate")==0) {
-    //video.style.transform = "rotate(90deg)";
-    //video.style.transformOrigin = "bottom left";
     video.style.width = "100vw";
     video.style.height = "100vh";
-    //video.style.marginTop = "-100vw";
-    video.style.objectFit = "cover";
   }
   if (localStorage.getItem("rotate")==-1) {
     video.style.transform = "rotate(-90deg)";
@@ -205,8 +165,8 @@ window.onload = async function(){
     video.style.width = "100vh";
     video.style.height = "100vw";
     video.style.marginTop = "100vh";
-    video.style.objectFit = "cover";
   }
+  video.style.objectFit = "cover";
 
   (async function loop() {
     if (localStorage.getItem("await")>0) await Update();
@@ -223,6 +183,13 @@ window.onload = async function(){
     }
   },60000);
 
+  if (localStorage.getItem("eye")) {
+    setInterval(async function(){
+      eyerect = detectEye(canvas);
+      console.log("eyerect="+eyerect);
+    },1000);
+  }
+
   setInterval(async function(){
     athome = false;
       try {
@@ -234,26 +201,83 @@ window.onload = async function(){
   },60000);
 
 }
+
+async function Update() {
+  canvas.ctx.drawImage(video, 0, 0);
+  if (!left) left = cv.imread(canvas);
+  else if (!right) right = cv.imread(canvas);
+  if (right && left) {
+
+    if (localStorage.getItem("eye") && eyerect) {
+      [x,y,w,h] = eyerect;
+      right = right.roi(new cv.Rect(x, y, w, h));
+      left = left.roi(new cv.Rect(x, y, w, h));
+    }
+
+    if (!athome && compare([right,left],localStorage.getItem("sensitivity"))) {
+      let blob = await (new Promise(resolve => canvas.toBlob(resolve)));
+      var dc = new Date();
+      dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getMinutes()].join("-");
+      await blob2dropbox(blob, "/home/"+dc+".jpg");
+      console.log("uploaded "+dc);
+      last = Date.parse(new Date());    
+    }
+    if (left) {
+      left.delete();
+      left=undefined;
+    }
+    if (right) {
+      right.delete();
+      right=undefined;
+    }
+  }
+}
+
+function detectEye(htmlImg) {
+  let src = cv.imread(htmlImg);
+  cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+  cv.threshold(src, src, 35, 255, cv.THRESH_BINARY);
+  let contours = new cv.MatVector();
+  let hierarchy = new cv.Mat();
+  cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+  var x=0,y=0,h=0,w=0,s=0;
+  for (let i = 0; i < contours.size(); ++i) {
+      let cnt = contours.get(i);
+      let rect = cv.boundingRect(cnt);
+      if (s<rect.width*rect.height) {
+        s=rect.width*rect.height;
+        x=rect.x;
+        y=rect.y;
+        w=rect.width;
+        h=rect.height;
+      }
+  }
+  src.delete();
+  return [x,y,w,h];
+}
     
 function compare(frames,sensitivity) {
   if (!sensitivity) sensitivity = 50;
   try {
+
+    var l = new cv.Mat();
+    var r = new cv.Mat();
+
     var dsize = new cv.Size(31, 31);
-    var f0 = new cv.Mat();
-    var f1 = new cv.Mat();
-    cv.resize(frames[0], f0, dsize, 0, 0, cv.INTER_LINEAR);
-    cv.cvtColor(f0, f0, cv.COLOR_RGBA2GRAY, 0);
-    cv.resize(frames[1], f1, dsize, 0, 0, cv.INTER_LINEAR);
-    cv.cvtColor(f1, f1, cv.COLOR_RGBA2GRAY, 0);
+    cv.resize(frames[0], l, dsize, 0, 0, cv.INTER_LINEAR);
+    cv.cvtColor(l, l, cv.COLOR_RGBA2GRAY, 0);
+    cv.resize(frames[1], r, dsize, 0, 0, cv.INTER_LINEAR);
+    cv.cvtColor(r, r, cv.COLOR_RGBA2GRAY, 0);
     dst = new cv.Mat();
-    cv.subtract(f0,f1,dst);
-    
-    f0.delete();
-    f1.delete();
-    
+    cv.subtract(l,r,dst);
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
     var sorted = Array.from(dst.data).sort(function(a,b){return b-a});
+
+    dst.delete();
+    l.delete();
+    r.delete();
+
     if (sorted[0]>sensitivity) {
       console.log([sorted[0],sorted[1],sorted[5],sorted[10]].join(","));
       return true;
@@ -264,5 +288,3 @@ function compare(frames,sensitivity) {
 </script>
 </body>
 </html>
-
-
