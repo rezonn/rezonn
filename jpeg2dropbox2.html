@@ -282,7 +282,7 @@ async function Update() {
 }
 
 function detectEye(htmlImg) {
-  var x=0,y=0,w=htmlImg.width,h=htmlImg.height;
+  var x=0,y=0,w=htmlImg.width-1,h=htmlImg.height-1;
   let src = new cv.Mat();
   try {
     src = cv.imread(htmlImg);
