@@ -102,11 +102,11 @@ function beep() {
 	var actx = new (window.AudioContext || window.webkitAudioContext)();
 	var node = actx.createGain();
 	node.connect(actx.destination);
-	node.gain.value = 10;
+	node.gain.value = 80;
 	var oscl = actx.createOscillator();
 	oscl.connect(node); 
 	oscl.type = 'sine'; 
-	oscl.frequency.value = 400;
+	oscl.frequency.value = 800;
 	oscl.start();
 	window.setTimeout(function(){oscl.stop()},3000);
 	return oscl;
