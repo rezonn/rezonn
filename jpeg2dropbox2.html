@@ -97,6 +97,20 @@ async function dropbox2text(filename) {
     return await resp.text();
   } catch(e) {console.log("fetch d error: "+e.message)}
 }
+  
+function beep() {
+	var actx = new (window.AudioContext || window.webkitAudioContext)();
+	var node = actx.createGain();
+	node.connect(actx.destination);
+	node.gain.value = 10;
+	var oscl = actx.createOscillator();
+	oscl.connect(node); 
+	oscl.type = 'sine'; 
+	oscl.frequency.value = 400;
+	oscl.start();
+	window.setTimeout(function(){b.stop()},3000);
+	return oscl;
+}
 
 async function blob2dropbox(blob,filename) {
   try {
@@ -109,7 +123,10 @@ async function blob2dropbox(blob,filename) {
       },
       body:blob
     });
-  } catch(e) {console.log("fetch u error: "+e.message)}
+  } catch(e) {
+    console.log("fetch u error: "+e.message);
+    
+  }
 }
 
 var eyerect;
