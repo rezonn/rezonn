@@ -128,7 +128,13 @@ window.onload = async function(){
   canvas = newhtml("canvas");
   //lcanvas = newhtml("canvas");
   //rcanvas = newhtml("canvas");
-  console.log = function(text) {newhtml("div",{innerText:text},LOG);LOG.scrollTop = LOG.scrollHeight;}
+  console.log = function(text) {
+    var dc = new Date();
+    dc = dc.getHours()+":"+dc.getMinutes();
+    dc = dc + " " + text;
+    newhtml("div",{innerText:dc},LOG);
+    LOG.scrollTop = LOG.scrollHeight;
+  }
   await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
   streams = await allStreams();
   //camlist.innerText = "";
@@ -291,15 +297,20 @@ function detectEye(htmlImg) {
   return [x,y,w,h];
 }
 
+function two(num) {
+  if (num.toString().length==1) return "0"+num;
+  else return num;
+}
+
 async function sendMat(mat,name) {
-  dc = new Date();
-  dc = [dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds(),dc.getMilliseconds()].join("-");
+  var dc = new Date();
+  dc = dc.getDate()+"T"+two(dc.getHours())+two(dc.getMinutes())+" "+two(dc.getSeconds())+dc.getMilliseconds();
   name = "/home/"+dc+"_"+name+".jpg";
   var temp = newhtml("canvas",{});
   cv.imshow(temp, mat);
   let blob = await (new Promise(resolve => temp.toBlob(resolve)));
   var resp = await (await blob2dropbox(blob, name)).text();
-  resp = resp.slice(0,10)+"..."+resp.slice(-10);
+  resp = resp.slice(0,10)+".."+resp.slice(-10);
   console.log("sendMat "+resp);
 }
     
