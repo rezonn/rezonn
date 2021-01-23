@@ -247,8 +247,11 @@ function detectEye(htmlImg) {
   try {
     post("stage",1);
     src = cv.imread(htmlImg);
+    post("stage",1.1);
     cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+    post("stage",1.2);
     cv.threshold(src, src, 35, 255, cv.THRESH_BINARY);
+    post("stage",1.3);
     cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
     post("stage",2);
     var x=0,y=0,h=0,w=0,s=0;
