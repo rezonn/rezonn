@@ -276,7 +276,6 @@ function detectEye(htmlImg) {
     if (x+w>htmlImg.width) w=htmlImg.width-x-1;
     if (y+h>htmlImg.height) h=htmlImg.height-y-1;
   } catch(e){console.log("detectEye "+e.message)}
-  post("stage",4);
   src.delete();
   hierarchy.delete();
   contours.delete();
