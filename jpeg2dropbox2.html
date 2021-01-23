@@ -299,6 +299,7 @@ async function compare(frames,sensitivity,resize) {
   var dst = new cv.Mat();
   try {
     var dsize = new cv.Size(resize, resize);
+    post("resize",resize);
     cv.resize(frames[0], l, dsize, 0, 0, cv.INTER_LINEAR);
     cv.cvtColor(l, l, cv.COLOR_RGBA2GRAY, 0);
     cv.resize(frames[1], r, dsize, 0, 0, cv.INTER_LINEAR);
