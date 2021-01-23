@@ -143,8 +143,6 @@ function sleep(ms) {
 
 window.onload = async function(){
   canvas = newhtml("canvas");
-  //lcanvas = newhtml("canvas");
-  //rcanvas = newhtml("canvas");
   console.log = function(text) {
     var dc = new Date();
     dc = dc.getHours()+":"+dc.getMinutes();
@@ -154,7 +152,6 @@ window.onload = async function(){
   }
   await ascript("https://huningxin.github.io/opencv.js/build/asm.js/opencv.js");
   streams = await allStreams();
-  //camlist.innerText = "";
   streams.map(function(stream){
     newhtml("div",{innerText:stream.device.label,stream:stream,onclick:async function(){
       video.srcObject = await this.stream.getMedia();
@@ -241,42 +238,6 @@ window.onload = async function(){
   }
 }
 
-async function Update() {
-  try {
-    canvas.ctx.drawImage(video, 0, 0);
-    if (!left) left = cv.imread(canvas);
-    else if (!right) right = cv.imread(canvas);
-    if (right && left) {
-      if (localStorage.getItem("eye") && eyerect) {
-        [x,y,w,h] = eyerect;
-        right = right.roi(new cv.Rect(x, y, w, h));
-        left = left.roi(new cv.Rect(x, y, w, h));
-      }
-      var ismotion = await compare(
-        [right,left],
-        localStorage.getItem("sensitivity"),
-        parseFloat(localStorage.getItem("resize"))
-      );
-      if (ismotion) {
-        var dc = new Date();
-        dc = [dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds(),dc.getMilliseconds()].join("-");
-        sendMat(left,"l");
-        sendMat(right,"r");
-        last = Date.parse(new Date());
-      }
-      if (left) {
-        left.delete();
-        left=undefined;
-      }
-      if (right) {
-        right.delete();
-        right=undefined;
-      }
-    }
-  } catch(e){console.log("Update error "+e.message)}
- 
-}
-
 function detectEye(htmlImg) {
   var x=0,y=0,w=htmlImg.width-1,h=htmlImg.height-1;
   let src = new cv.Mat();
@@ -346,7 +307,7 @@ async function compare(frames,sensitivity,resize) {
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
     var sorted = Array.from(dst.data).sort(function(a,b){return b-a});
     sensitivity = sensitivity * (resize*resize/31/31);
-    post("moving",sorted[0])
+    post("moving",sorted[0]+" vs "+sensitivity);
     if (sorted[0]>sensitivity) {
       console.log("sens "+[sorted[0],sorted[1],sorted[10]].join(".."));
       return true;
