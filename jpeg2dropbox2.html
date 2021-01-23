@@ -240,6 +240,7 @@ window.onload = async function(){
 
 function detectEye(htmlImg) {
   var x=0,y=0,w=htmlImg.width-1,h=htmlImg.height-1;
+  post("size",[x,y,w,h]);
   let src = new cv.Mat();
   let hierarchy = new cv.Mat();
   let contours = new cv.MatVector();
