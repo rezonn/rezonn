@@ -99,17 +99,17 @@ async function dropbox2text(filename) {
 }
   
 function beep() {
-	var actx = new (window.AudioContext || window.webkitAudioContext)();
-	var node = actx.createGain();
-	node.connect(actx.destination);
-	node.gain.value = 80;
-	var oscl = actx.createOscillator();
-	oscl.connect(node); 
-	oscl.type = 'sine'; 
-	oscl.frequency.value = 800;
-	oscl.start();
-	window.setTimeout(function(){oscl.stop()},3000);
-	return oscl;
+  var actx = new (window.AudioContext || window.webkitAudioContext)();
+  var node = actx.createGain();
+  node.connect(actx.destination);
+  node.gain.value = 80;
+  var oscl = actx.createOscillator();
+  oscl.connect(node); 
+  oscl.type = 'sine'; 
+  oscl.frequency.value = 800;
+  oscl.start();
+  window.setTimeout(function(){oscl.stop()},3000);
+  return oscl;
 }
 
 async function blob2dropbox(blob,filename) {
@@ -298,6 +298,8 @@ async function sendMat(mat,name) {
   resp = resp.slice(0,10)+".."+resp.slice(-10);
   console.log("sendMat "+resp);
 }
+
+
     
 async function compare(frames,sensitivity,resize) {
   var l = new cv.Mat();
@@ -310,6 +312,13 @@ async function compare(frames,sensitivity,resize) {
     cv.cvtColor(l, l, cv.COLOR_RGBA2GRAY, 0);
     cv.resize(frames[1], r, dsize, 0, 0, cv.INTER_LINEAR);
     cv.cvtColor(r, r, cv.COLOR_RGBA2GRAY, 0);
+
+    var brightness = new cv.Mat();
+    cv.resize(r, brightness, (new cv.Size(10, 10)), 0, 0, cv.INTER_LINEAR);
+    var brightnessValue = Array.from(brightness.data).sort(function(a,b){return b-a})[0];
+    post("brightness", brightnessValue);
+    brightness.delete();
+
     cv.subtract(l,r,dst);
     var dsize = new cv.Size(10, 10);
     cv.resize(dst, dst, dsize, 0, 0, cv.INTER_LINEAR);
