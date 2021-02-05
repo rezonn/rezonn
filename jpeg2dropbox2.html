@@ -170,6 +170,14 @@ window.onload = async function(){
     }},td);
   });
 
+  newhtml("input",{
+    "type":"button",
+    "value":"detect eye",
+    "onclick":function(){
+      eyerect = detectEye(canvas);
+    }
+  },camlist);
+
   if (localStorage.getItem("rotate")==1) {
     video.style.transform = "rotate(90deg)";
     video.style.transformOrigin = "bottom left";
@@ -229,13 +237,14 @@ window.onload = async function(){
       last = Date.parse(new Date());
     }
   },60000);
-
+  /*
   if (localStorage.getItem("eye")==1) {
     setInterval(async function(){
       eyerect = detectEye(canvas);
       post("eyerect",eyerect);
     },55000);
   }
+  */
 }
 
 function detectEye(htmlImg) {
