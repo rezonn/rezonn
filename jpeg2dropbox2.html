@@ -170,9 +170,8 @@ window.onload = async function(){
     }},td);
   });
 
-  newhtml("input",{
-    "type":"button",
-    "value":"detect eye",
+  newhtml("div",{
+    "innerText":"detect eye",
     "onclick":function(){
       eyerect = detectEye(canvas);
     }
