@@ -307,8 +307,6 @@ async function sendMat(mat,name) {
   console.log("sendMat "+resp);
 }
 
-
-    
 async function compare(frames,sensitivity,resize) {
   var l = new cv.Mat();
   var r = new cv.Mat();
@@ -324,7 +322,7 @@ async function compare(frames,sensitivity,resize) {
     var brightness = new cv.Mat();
     cv.resize(r, brightness, (new cv.Size(10, 10)), 0, 0, cv.INTER_LINEAR);
     var brightnessValue = Array.from(brightness.data).sort(function(a,b){return b-a})[0];
-    if (brightnessValue>0 && brightnessValue<10) beep();
+    if (brightnessValue>0 && brightnessValue<35) beep();
     post("brightness", brightnessValue);
     brightness.delete();
 
