@@ -140,7 +140,7 @@ window.onload = async function(){
 
   canvas  = newhtml("canvas",{},document.body);
   canvas2 = newhtml("canvas",{},document.body);
-  video.srcObject = await (await allStreams())[0].getMedia();
+  video.srcObject = await (await allStreams()).reverse()[0].getMedia();
   await new Promise((resolve)=>{video.onplay=()=>resolve(video)});
   
   video.style.width = "1px";video.style.height = "1px";
