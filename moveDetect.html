@@ -162,7 +162,7 @@ window.onload = async function(){
   }},LOG);
 
   (async function loop() {
-    const left = tf.browser.fromPixels(video,1);
+    const left = tf.browser.fromPixels(video,3);
     const cutted = cut(left,0.4,0.35,0.4,0.35);
     tf.browser.toPixels(cutted, canvas);
     const bright = cutted.max();
