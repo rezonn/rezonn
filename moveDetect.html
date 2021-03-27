@@ -193,7 +193,8 @@ window.onload = async function(){
     const right = tf.browser.fromPixels(canvas,1);
     if (left.shape[0]==right.shape[0]) {
       const diff = left.sub(right);
-      const nonz = diff.clipByValue(0,150).toInt();
+      const nonz = diff.clipByValue(0,150)
+      const non2 = nonz.toInt();
       const move = nonz.max();
       var movei = await move.data();
       if (movei>parseFloat(localStorage.getItem("move"))) {
@@ -207,6 +208,7 @@ window.onload = async function(){
       diff.dispose();
       move.dispose();
       nonz.dispose();
+      non2.dispose();
       state.dsp("tensors "+tf.memory().numTensors, 2);
       state.dsp("bytes "+(tf.memory().numBytesInGPU/1000000>>0)+"Mb", 3);
       // state.dsp("/"+(tf.memory().numBytes/1000000>>0)+"Mb", 3);
