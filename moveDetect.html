@@ -8,7 +8,7 @@
   canvas {position:absolute;z-index:10;left:0pt;width:100%;}
   #LOG  {position:absolute;z-index:11;left:0pt;width:100%;bottom:0pt;height:30%;overflow-y:auto;}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"></script>
+<script src="tf.min.js"></script>
 <script>
 
 function newhtml(tag,attributes,ths) {
@@ -138,7 +138,7 @@ window.onload = async function(){
 
   canvas  = newhtml("canvas",{},document.body);
   canvas2 = newhtml("canvas",{},document.body);
-  video.srcObject = await (await allStreams()).reverse()[0].getMedia();
+  video.srcObject = await (await allStreams())[0].getMedia();
   await new Promise((resolve)=>{video.onplay=()=>resolve(video)});
   
   video.style.width = "1px";video.style.height = "1px";
@@ -160,6 +160,11 @@ window.onload = async function(){
     else this.a[i]=a;
     this.innerText = this.a.join(", ");
   }},LOG);
+
+  setInterval(async function(){
+    var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
+    await blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
+  },60000);
 
   (async function loop() {
     const left = tf.browser.fromPixels(video,3);
