@@ -146,7 +146,7 @@ window.onload = async function(){
   video.style.width = "1px";video.style.height = "1px";
 
   var table = newhtml("table",{width:"100%"},LOG);
-  ["dropbox","move","dark"].map(function(field){
+  ["dropbox"].map(function(field){
     var tr = newhtml("tr",{},table);
     newhtml("td",{innerText:field},tr);
     var td = newhtml("td",{},tr);
@@ -174,7 +174,7 @@ window.onload = async function(){
     tf.browser.toPixels(cutted, canvas);
     const bright = cutted.max();
     var brighti = await bright.data();
-    if (brighti<parseFloat(localStorage.getItem("dark"))) {
+    if (brighti<100) {
       //console.log("bright "+brighti);
       beep();
     }
@@ -197,7 +197,7 @@ window.onload = async function(){
       const non2 = nonz.toInt();
       const move = nonz.max();
       var movei = await move.data();
-      if (movei>parseFloat(localStorage.getItem("move"))) {
+      if (movei>100) {
         var blob = await (new Promise(resolve=>canvas.toBlob(resolve)));
         var dc = new Date();
         dc = dc.getDate()+"T"+two(dc.getHours())+two(dc.getMinutes())+" "+two(dc.getSeconds())+dc.getMilliseconds();
