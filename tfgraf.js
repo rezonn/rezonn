@@ -240,6 +240,7 @@ function visualizeModel(div, model) {
       var labels = [];
       if (e.dataTransfer && e.dataTransfer.items) {
         var folders = e.dataTransfer.items;
+        console.log("folders.length="+folders.length);
         let promises = [];
         for (var i=0; i<folders.length; i++) {
           promises.push(readFileList(folders[i]));
@@ -256,9 +257,11 @@ function visualizeModel(div, model) {
             labels.push(i);
           }
         }
+        console.log("folders.length="+folders.length);
+        var ys = tf.oneHot(tf.tensor1d(labels, 'int32'), folders.length);
+        ys.print();
       }
-      var ys = tf.oneHot(tf.tensor1d(labels, 'int32'), folders.length);
-      ys.print();
+      
 
     }
 
