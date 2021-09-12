@@ -247,17 +247,21 @@ function visualizeModel(div, model) {
       //import images
       var data = [];
       var labels = [];
+      var titles = [];
       if (e.dataTransfer && e.dataTransfer.items) {
         var folders = e.dataTransfer.items;
-        var numclasses = folders.length;
+        var classes = folders.length;
         let promises = [];
         for (var i=0; i<folders.length; i++) {
+          titles.push(folders[i].webkitGetAsEntry().name);
           promises.push(readFileList(folders[i]));
         }
         var filesLists = await Promise.all(promises);
+
         for (var i=0;i<filesLists.length;i++) {
           var files = filesLists[i];
           for (var j=0;j<files.length;j++) {
+          //for (var j=0;j<10;j++) {
             const file = await readFile(files[j]);
             var blob = new Blob([file], {type: 'image/jpeg'});
             //var image = new Image();
@@ -268,14 +272,29 @@ function visualizeModel(div, model) {
             labels.push(i);
           }
         }
-        var ys = tf.oneHot(tf.tensor1d(labels, 'int32'), numclasses);
-        var data2 = tf.stack(data);
+        var ys = tf.oneHot(tf.tensor1d(labels, 'int32'), classes);
+        var xs = tf.stack(data);
         for (var i=0;i<data.length;i++) {
           data[i].dispose();
           //labels[i].dispose();
         }
+        console.log(titles)
         ys.print();
-        data2.print();
+        xs.print();
+
+
+
+        model = makemodel(xs.shape.slice(1), classes);
+
+        var fitCallbacks = await tfvis.show.fitCallbacks(trainview,["loss", "val_loss", "acc", "val_acc"]);
+        fitCallbacks.onBatchEnd = undefined;
+
+        const h1 = await model.fit(xs,ys,{epochs:10,batchSize:10,shuffle:true,callbacks:fitCallbacks,validationSplit:0.1});
+        xs.dispose();
+        ys.dispose();
+
+
+
       }
 
     }
