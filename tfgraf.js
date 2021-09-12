@@ -207,6 +207,15 @@ function visualizeModel(div, model) {
       catch(e) {console.log(e.message)}
     });
   }
+
+  function newimg(src,img) {
+    return new Promise((resolve, reject) => {
+      if (!img) img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
   
   svg.ondrop = async function (e) {
     this.className = '';
@@ -240,7 +249,6 @@ function visualizeModel(div, model) {
       var labels = [];
       if (e.dataTransfer && e.dataTransfer.items) {
         var folders = e.dataTransfer.items;
-        var classes = folders.length;
         console.log("folders.length="+folders.length);
         let promises = [];
         for (var i=0; i<folders.length; i++) {
@@ -252,17 +260,24 @@ function visualizeModel(div, model) {
           for (var j=0;j<files.length;j++) {
             const file = await readFile(files[j]);
             var blob = new Blob([file], {type: 'image/jpeg'});
-            var image = new Image();
-            image.src = URL.createObjectURL(blob);
-            document.body.appendChild(image);
+            //var image = new Image();
+            //image.src = URL.createObjectURL(blob);
+            var image = await newimg(URL.createObjectURL(blob));
+            data.push(await tf.browser.fromPixels(image,3));
+            //document.body.appendChild(image);
             labels.push(i);
           }
         }
-        console.log("folders.length="+folders.length+" "+classes);
-        var ys = tf.oneHot(tf.tensor1d(labels, 'int32'), classes);
+        console.log("folders.length="+folders.length);
+        var ys = tf.oneHot(tf.tensor1d(labels, 'int32'), folders.length);
+        var data2 = tf.stack(data);
+        for (var i=0;i<count;i++) {
+          data[i].dispose();
+          //labels[i].dispose();
+        }
         ys.print();
+        data2.print();
       }
-      
 
     }
 
