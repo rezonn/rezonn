@@ -196,7 +196,6 @@ function visualizeModel(div, model) {
     });
   }
 
-  
   function readFileList(folder) {
     //while (!folder.webkitGetAsEntry()) x=1
     var reader = folder.webkitGetAsEntry().createReader();
@@ -277,8 +276,6 @@ function visualizeModel(div, model) {
         else console.log("MOVE");
 
         xs.dispose();
-
-
       }
 
 
@@ -329,7 +326,7 @@ function visualizeModel(div, model) {
         var fitCallbacks = await tfvis.show.fitCallbacks(trainview,["loss", "val_loss", "acc", "val_acc"]);
         fitCallbacks.onBatchEnd = undefined;
 
-        const h1 = await model.fit(xs,ys,{epochs:10,batchSize:10,shuffle:true,callbacks:fitCallbacks,validationSplit:0.1});
+        const h1 = await model.fit(xs,ys,{epochs:30,batchSize:10,shuffle:true,callbacks:fitCallbacks,validationSplit:0.1});
         xs.dispose();
         ys.dispose();
 
