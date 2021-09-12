@@ -249,7 +249,7 @@ function visualizeModel(div, model) {
       var labels = [];
       if (e.dataTransfer && e.dataTransfer.items) {
         var folders = e.dataTransfer.items;
-        console.log("folders.length="+folders.length);
+        var numclasses = folders.length;
         let promises = [];
         for (var i=0; i<folders.length; i++) {
           promises.push(readFileList(folders[i]));
@@ -268,8 +268,7 @@ function visualizeModel(div, model) {
             labels.push(i);
           }
         }
-        console.log("folders.length="+folders.length);
-        var ys = tf.oneHot(tf.tensor1d(labels, 'int32'), folders.length);
+        var ys = tf.oneHot(tf.tensor1d(labels, 'int32'), numclasses);
         var data2 = tf.stack(data);
         for (var i=0;i<count;i++) {
           data[i].dispose();
@@ -280,24 +279,6 @@ function visualizeModel(div, model) {
       }
 
     }
-
-    /*
-    // Fallback
-    var files = e.target.files || e.dataTransfer.files;
-    if (!files.length) {
-      alert('File type not accepted');
-      return;
-    }
-
-    var files = await e.dataTransfer.items;
-
-    for (var i = 0,files2=[]; i < files.length; i++) {
-      files2.push(files[i]);
-      zz = files[i];
-    }
-
-    alert(files2.map(f=>f.name).join("\n"))
-    */
 
   }
   if (model) {
@@ -352,4 +333,3 @@ function rendmodel(model) {
   });
   updatePolylines();
 }
-
