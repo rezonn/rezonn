@@ -5,7 +5,7 @@
 body{background:#555;}
 </style>
 <script src="tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis"></script>
+<script src="tfjs.vis.min.js"></script>
 <script src="client.js"></script>
 <script src="sugar.js"></script>
 <script src="tfgraf.js"></script>
@@ -49,6 +49,7 @@ rand = (min,max)=>Math.round(Math.random()*(max-min))+Math.round(min);
 const conv2d = (f,k)=>tf.layers.conv2d({kernelSize:k,padding:"same",filters:f,strides:1,activation:'relu',kernelInitializer:'varianceScaling'});
 
 function makemodel(inputShape,classes) {
+  console.log("new model "+inputShape+"->"+classes);
   var input = tf.input({shape:inputShape});
   var c1 = conv2d(8,3).apply(input);
   var c1 = norm().apply(c1);
@@ -59,6 +60,7 @@ function makemodel(inputShape,classes) {
   var c1 = maxp(2).apply(c1);
   var c1 = norm().apply(c1);
   var c1 = tf.layers.flatten().apply(c1);
+  var c1 = tf.layers.dense({units:classes, activation:"relu"}).apply(c1);
   var output = tf.layers.dense({units:classes, activation:"softmax"}).apply(c1);
   var model = tf.model({inputs:input,outputs:output});
   model.compile({optimizer:tf.train.adam(),loss:'categoricalCrossentropy',metrics:['accuracy']});
