@@ -282,8 +282,6 @@ function visualizeModel(div, model) {
         ys.print();
         xs.print();
 
-
-
         model = makemodel(xs.shape.slice(1), classes);
 
         var fitCallbacks = await tfvis.show.fitCallbacks(trainview,["loss", "val_loss", "acc", "val_acc"]);
@@ -293,7 +291,7 @@ function visualizeModel(div, model) {
         xs.dispose();
         ys.dispose();
 
-
+        saveModelLink(model, "dooreye", div);
 
       }
 
