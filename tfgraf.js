@@ -85,7 +85,7 @@ async function moveInstrment(obj1) {
   while (!p1.isResolved()) {
     var p = await coord("onmousemove",svg);
     p = scale(p,scf);
-    p = round(p,15);
+    p = round(p,10);
     transform.setTranslate(p[0], p[1]);
     updatePolylines();
   }
@@ -165,8 +165,10 @@ async function saveModelLink(model, fname, parentNode) {
 }
 
 async function loadModel(data,fname) {
-  if (!fname) fname = "policyNet";
+  if (!fname) fname = data[0].key.split("/")[1];
+  console.log("fname="+fname);
   for(var i=0; i<data.length; i++) {
+
     localStorage.setItem(data[i].key, data[i].data);
   }
   return await tf.loadLayersModel("localstorage://"+fname);
@@ -234,14 +236,52 @@ function visualizeModel(div, model) {
     }    
 
     if (e.dataTransfer.files.length==1) {
-      //import json
-      var data = JSON.parse(await e.dataTransfer.files[0].text());
-      newmodel = await loadModel(data);
-      if (div.model) div.model.setWeights(newmodel.getWeights());
-      else div.model = model;
-      rendmodel(div.model);
-      div.style.background="none";
-      saveModelLink(model, "policyNet", ttl);
+      var file = e.dataTransfer.files[0];
+      if (file.name.indexOf(".json")>-1) {
+
+
+        //import json
+        var data = JSON.parse(await e.dataTransfer.files[0].text());
+        console.log(data);
+        newmodel = await loadModel(data);
+        /*
+        try {
+          if (div.model) div.model.setWeights(newmodel.getWeights());
+          else div.model = newmodel;
+          console.log("model update");
+        } catch (e) {
+          div.model = newmodel;
+          console.log("model replaced");
+        }
+        */
+        div.model = newmodel;
+        rendmodel(div.model);
+        div.style.background="none";
+        saveModelLink(model, "policyNet", ttl);        
+      }
+      if (file.name.indexOf(".jpg")>-1) {
+        //alert("картинка");
+
+        var blob = new Blob([file], {type: 'image/jpeg'});
+        var image = await newimg(URL.createObjectURL(blob));
+        var data = [];
+        data.push(await tf.browser.fromPixels(image,3));
+        var xs = tf.stack(data);
+        for (var i=0;i<data.length;i++) {
+          data[i].dispose();
+        }
+        var p = (await div.model.predict(xs)).unstack()[0].dataSync();
+        p = Array.from(p);
+
+        if (p[0]>p[1]) console.log("OK")
+        else console.log("MOVE");
+
+        xs.dispose();
+
+
+      }
+
+
     }
     else {
       //import images
@@ -284,10 +324,12 @@ function visualizeModel(div, model) {
 
         model = makemodel(xs.shape.slice(1), classes);
 
+        tfvis.show.modelSummary(document.body, model);
+
         var fitCallbacks = await tfvis.show.fitCallbacks(trainview,["loss", "val_loss", "acc", "val_acc"]);
         fitCallbacks.onBatchEnd = undefined;
 
-        const h1 = await model.fit(xs,ys,{epochs:50,batchSize:10,shuffle:true,callbacks:fitCallbacks,validationSplit:0.1});
+        const h1 = await model.fit(xs,ys,{epochs:10,batchSize:10,shuffle:true,callbacks:fitCallbacks,validationSplit:0.1});
         xs.dispose();
         ys.dispose();
 
@@ -328,15 +370,29 @@ function newnode(props) {
 }
 
 function rendmodel(model) {
+
+  //alert(svg.childNodes.length);
+  for (var i=svg.childNodes.length-1;i>=0;i--) {
+    svg.removeChild(svg.childNodes[i]);
+  }
+
+  console.log("rendmodel")
   var nodes = model.layers.map(function(l,i){
+    console.log("render layer "+l.input.shape.toString());
+
+    var clname = l.getClassName();
+    if (clname.indexOf("MaxP")>-1) clname = "MaxP";
+    if (clname.indexOf("Norm")>-1) clname = "Norm";
+    if (clname.indexOf("Input")>-1) clname = "Input";
+
     var node = newnode({
       id:l.name.toString(),
-      name:l.getClassName(),
+      name:clname,
       inputShape:l.input.shape.toString().slice(1),
       outputShape:l.output.shape.toString().slice(1)
     });
     node.rend();
-    getTransforms(node.g).setTranslate(i*30+10, 20);
+    getTransforms(node.g).setTranslate(i*20+10, 10);
     return node;
   });
   model.layers.map(function(l,i){
