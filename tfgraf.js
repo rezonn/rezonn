@@ -270,7 +270,7 @@ function visualizeModel(div, model) {
         }
         var ys = tf.oneHot(tf.tensor1d(labels, 'int32'), numclasses);
         var data2 = tf.stack(data);
-        for (var i=0;i<count;i++) {
+        for (var i=0;i<data.length;i++) {
           data[i].dispose();
           //labels[i].dispose();
         }
