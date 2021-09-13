@@ -1,6 +1,8 @@
 ### Hi there 👋
 
-[Move Detection -> JPEG -> Dropbox](https://rezonn.github.io/rezonn/jpeg2dropbox2.html)
+[TF.JS GUI](https://rezonn.github.io/rezonn/doorEye.html)
+
+[Move Detection -> JPEG -> Dropbox](https://rezonn.github.io/rezonn/moveDetect.html)
 
 [mp4 -> Youtube](https://rezonn.github.io/rezonn/) not working yet
 
