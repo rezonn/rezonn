@@ -56,11 +56,13 @@ const conv2d = (f,k)=>tf.layers.conv2d({kernelSize:k,padding:"same",filters:f,st
 function makemodel(inputShape,classes) {
 
   var input = tf.input({shape:inputShape});
-  var c1 = conv2d(8,3).apply(input);
+  var c1 = conv2d(16,3).apply(input);
+  var c1 = conv2d(16,3).apply(c1);
   var c1 = norm().apply(c1);
   var c1 = maxp(2).apply(c1);
   var c1 = norm().apply(c1);
-  var c1 = conv2d(16,3).apply(c1);
+  var c1 = conv2d(32,3).apply(c1);
+  var c1 = conv2d(32,3).apply(c1);
   var c1 = norm().apply(c1);
   var c1 = maxp(2).apply(c1);
   var c1 = norm().apply(c1);
