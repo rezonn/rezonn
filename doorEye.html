@@ -396,7 +396,8 @@ function visualizeModel(div, model) {
   divBB = round(scale(divBB,0.2),1);
   //alert(divBB)
 
-  svg = newhtml("svg",{viewBox:"0 0 "+divBB.join(" "),style:{"webkitTouchCallout":"none","webkitUserSelect":"none"}},div);
+  //svg = newhtml("svg",{viewBox:"0 0 "+divBB.join(" "),style:{"webkitTouchCallout":"none","webkitUserSelect":"none"}},div);
+  svg = newhtml("svg",{style:{"webkitTouchCallout":"none","webkitUserSelect":"none"}},div);
   svg.ondragover = function () { div.style.background="#eee";return false; };
   svg.ondragend = function () { div.style.background="none";return false; };
 
@@ -576,7 +577,6 @@ function newbox(layer) {
   var inputShape;
   if (Array.isArray(layer.input)) inputShape = layer.input?.map((a)=>a.toString()).join(";");
   else inputShape = layer.input?.shape.toString().slice(1);
-
   var outputShape = layer.output?.shape.toString().slice(1);
   var [x,y,w,h,p] = [0,0,10,15,2];
   g = newhtml("g",{layer:layer},svg);
@@ -615,12 +615,15 @@ function rendmodel(model) {
   });
 
   var bb = [(model.layers.length)*20+10, modelview.getBoundingClientRect().height];
+  bb1 = scale(bb,5)
   console.log(bb);
+  svg.style.width = bb1[0];
+  svg.style.height = bb1[1];
+  svg.style.backgroundColor = "#777"
+  //svg.width = bb[0];
+  //svg.height = bb[1];  
   svg.setAttribute("viewBox", "0 0 "+bb.join(" ")); 
-  svg.style.width = bb[0];
-  svg.style.height = bb[1];
-  svg.width = bb[0];
-  svg.height = bb[1];
+
 
   updatePolylines();
 }
