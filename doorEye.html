@@ -90,8 +90,9 @@ const modelResNet = () => {
     const residual2 = residualBlock(conv1, 16, true);
     const residual3 = residualBlock(residual2, 32);
     const residual4 = residualBlock(residual3, 64);
-    const residual5 = residualBlock(residual4, 128);
-    const conv5 = tf.layers.avgPool2d({poolSize:[8,8], strides:[1,1],}).apply(residual5);
+    //const residual5 = residualBlock(residual4, 128);
+    //const conv5 = tf.layers.avgPool2d({poolSize:[8,8], strides:[1,1],}).apply(residual5);
+    const conv5 = tf.layers.avgPool2d({poolSize:[8,8], strides:[1,1],}).apply(residual4);
     const flatten = tf.layers.flatten().apply(conv5);
     const dropout = tf.layers.dropout({ rate: 0.5 }).apply(flatten);
     const dense = tf.layers.dense({units: 2,kernelInitializer: "glorotNormal",activation: "softmax"}).apply(dropout);
@@ -118,6 +119,7 @@ function makemodel(inputShape,classes) {
   model.compile({optimizer:tf.train.adam(),loss:'categoricalCrossentropy',metrics:['accuracy']});
   */
   var model = modelResNet();
+  model.compile({optimizer:tf.train.adam(),loss:'categoricalCrossentropy',metrics:['accuracy']});
   return model;
 }
 
@@ -617,6 +619,8 @@ function rendmodel(model) {
   svg.setAttribute("viewBox", "0 0 "+bb.join(" ")); 
   svg.style.width = bb[0];
   svg.style.height = bb[1];
+  svg.width = bb[0];
+  svg.height = bb[1];
 
   updatePolylines();
 }
