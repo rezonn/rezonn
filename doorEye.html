@@ -59,44 +59,30 @@ const batchNormRelu = (input)=>{
     return tf.layers.reLU().apply(batch);
 };
 
-// Residual block
-const residualBlock = (input, filters, noDownSample) => {
-    const filter1 = tf.layers.separableConv2d({ kernelSize: 3, filters, activation: "relu", padding: "same", strides: noDownSample ? 1 : 2, depthwiseInitializer: "glorotNormal", pointwiseInitializer: "glorotNormal",}).apply(input);
-    const filter1norm = batchNormRelu(filter1);
-    const filter2 = tf.layers
-        .separableConv2d({
-            kernelSize: 3,
-            filters,
-            activation: "relu",
-            padding: "same",
-            depthwiseInitializer: "glorotNormal",
-            pointwiseInitializer: "glorotNormal",
-        })
-        .apply(filter1norm);
-    const dropout = tf.layers.dropout({ rate: 0.3 }).apply(filter2);
-    const batchNorm = batchNormRelu(dropout);
-    
-    // Residual connection - here we sum up first matrix and the result of 2 convolutions
-    const residual = tf.layers.add().apply([filter1, batchNorm]);
-    return residual;
+const residualBlock = (input, filters, strides=2) => {
+  const filter1 = tf.layers.separableConv2d({ kernelSize:3, filters, activation:"relu", padding:"same", strides:strides, depthwiseInitializer:"glorotNormal", pointwiseInitializer:"glorotNormal"}).apply(input);
+  const filter1norm = batchNormRelu(filter1);
+  const filter2 = tf.layers.separableConv2d({kernelSize:3,filters,activation:"relu",padding:"same",depthwiseInitializer:"glorotNormal",pointwiseInitializer:"glorotNormal"}).apply(filter1norm);
+  const dropout = tf.layers.dropout({rate:0.3}).apply(filter2);
+  const batchNorm = batchNormRelu(dropout);
+  const residual = tf.layers.add().apply([filter1, batchNorm]);
+  return residual;
 };
 
-
-// ResNet - put all together
 const modelResNet = () => {
-    const input = tf.input({ shape: [128, 144, 3] });
-    const conv1_filter = tf.layers.conv2d({kernelSize:5, filters:16, strides:2, activation:"relu", padding:"same", kernelInitializer: "glorotNormal"}).apply(input);
-    const conv1 = tf.layers.maxPooling2d({poolSize:[3,3],strides:[2,2],padding:"same"}).apply(batchNormRelu(conv1_filter));
-    const residual2 = residualBlock(conv1, 16, true);
-    const residual3 = residualBlock(residual2, 32);
-    const residual4 = residualBlock(residual3, 64);
-    //const residual5 = residualBlock(residual4, 128);
-    //const conv5 = tf.layers.avgPool2d({poolSize:[8,8], strides:[1,1],}).apply(residual5);
-    const conv5 = tf.layers.avgPool2d({poolSize:[8,8], strides:[1,1],}).apply(residual4);
-    const flatten = tf.layers.flatten().apply(conv5);
-    const dropout = tf.layers.dropout({ rate: 0.5 }).apply(flatten);
-    const dense = tf.layers.dense({units: 2,kernelInitializer: "glorotNormal",activation: "softmax"}).apply(dropout);
-    return tf.model({inputs: input,outputs: dense});
+  const input = tf.input({ shape: [128, 144, 3] });
+  const conv1_filter = tf.layers.conv2d({kernelSize:5, filters:16, strides:2, activation:"relu", padding:"same", kernelInitializer: "glorotNormal"}).apply(input);
+  const conv1 = tf.layers.maxPooling2d({poolSize:[3,3],strides:[2,2],padding:"same"}).apply(batchNormRelu(conv1_filter));
+  const residual2 = residualBlock(conv1, 16, 1);
+  const residual3 = residualBlock(residual2, 32);
+  const residual4 = residualBlock(residual3, 64);
+  //const residual5 = residualBlock(residual4, 128);
+  //const conv5 = tf.layers.avgPool2d({poolSize:[8,8], strides:[1,1],}).apply(residual5);
+  const conv5 = tf.layers.avgPool2d({poolSize:[8,8], strides:[1,1]}).apply(residual4);
+  const flatten = tf.layers.flatten().apply(conv5);
+  const dropout = tf.layers.dropout({ rate: 0.5 }).apply(flatten);
+  const dense = tf.layers.dense({units:2, kernelInitializer:"glorotNormal", activation:"softmax"}).apply(dropout);
+  return tf.model({inputs:input, outputs:dense});
 };
 
 function makemodel(inputShape,classes) {
@@ -501,6 +487,8 @@ function visualizeModel(div, model) {
     }
     else {
       //import images
+      train.disabled = true;
+
       var data = [];
       var labels = [];
       var titles = [];
@@ -542,6 +530,7 @@ function visualizeModel(div, model) {
         //tfvis.show.modelSummary(document.body, model);
         var fitCallbacks = await tfvis.show.fitCallbacks(trainview,["loss", "val_loss", "acc", "val_acc"]);
         fitCallbacks.onBatchEnd = undefined;
+        
         const h1 = await model.fit(xs,ys,{
           epochs:epochCount.value,
           batchSize:10,
@@ -552,6 +541,7 @@ function visualizeModel(div, model) {
         xs.dispose();
         ys.dispose();
         saveModelLink(model, "dooreye", savecontainer);
+        train.disabled = false;
       }
     }
   }
@@ -615,16 +605,15 @@ function rendmodel(model) {
   });
 
   var bb = [(model.layers.length)*20+10, modelview.getBoundingClientRect().height];
-  bb1 = scale(bb,5)
+  bb[1] = bb[1]/5>>0;
+  bb1 = scale(bb,5);
   console.log(bb);
   svg.style.width = bb1[0];
   svg.style.height = bb1[1];
   svg.style.backgroundColor = "#777"
   //svg.width = bb[0];
   //svg.height = bb[1];  
-  svg.setAttribute("viewBox", "0 0 "+bb.join(" ")); 
-
-
+  svg.setAttribute("viewBox", "0 0 "+bb.join(" "));
   updatePolylines();
 }
 
@@ -644,7 +633,7 @@ function rendmodel(model) {
   <div>Optimizator:</div>
   <div>LimitInp:<input type="" id="LimitInp" value="10" inputmode="numeric" size="10"></div>
   <div>EpochCount:<input type="" id="epochCount" value="30" inputmode="numeric" size="10"></div>
-  <div>Learn:</div>
+  <div><button id="train" onclick="fitModel()">Train</button></div>
 </div>
 <div id="trainview"></div>
 
