@@ -5,12 +5,13 @@
 body {background:#555;margin:0;}
 div {padding-left:4;padding-right:4;}
 input {border-width:1;border-color:#000;border-style:solid}
-#modelview {position:absolute;top:0;bottom:300;left:0;right:0;border-width:1;border-color:#111;border-style:solid}
+#modelview {position:absolute;top:0;bottom:300;left:0;right:0;border-width:1;border-color:#111;border-style:solid;overflow:scroll;}
 #commands {position:absolute;height:300;bottom:0;left:0;width:200;background-color:#655;overflow-y:auto;}
 #trainview {position:absolute;height:300;bottom:0;left:75%;right:0;background-color:#655;overflow-y:auto;}
 #propertycontainer {position:absolute;height:300;bottom:0;left:200;width:200;background-color:#556;overflow-y:auto;}
 #commoncontainer {position:absolute;height:300;bottom:0;left:400;width:200;background-color:#565;overflow-y:auto;}
 #state {position:absolute;z-index:2;top:5;height:80;right:5;width:120;background-color:#656;color:#fff;}
+#logger {position:absolute;height:300;bottom:0;left:600;right:25%;background-color:#444;overflow-y:auto;color:white;}
 </style>
 <script src="tf.min.js"></script>
 <script src="tfjs-vis.min.js"></script>
@@ -53,8 +54,52 @@ const convdw = (scale)=>tf.layers.depthwiseConv2d({kernelSize:[3,3],padding:"sam
 rand = (min,max)=>Math.round(Math.random()*(max-min))+Math.round(min);
 const conv2d = (f,k)=>tf.layers.conv2d({kernelSize:k,padding:"same",filters:f,strides:1,activation:'relu',kernelInitializer:'varianceScaling'});
 
-function makemodel(inputShape,classes) {
+const batchNormRelu = (input)=>{
+    const batch = tf.layers.batchNormalization().apply(input);
+    return tf.layers.reLU().apply(batch);
+};
 
+// Residual block
+const residualBlock = (input, filters, noDownSample) => {
+    const filter1 = tf.layers.separableConv2d({ kernelSize: 3, filters, activation: "relu", padding: "same", strides: noDownSample ? 1 : 2, depthwiseInitializer: "glorotNormal", pointwiseInitializer: "glorotNormal",}).apply(input);
+    const filter1norm = batchNormRelu(filter1);
+    const filter2 = tf.layers
+        .separableConv2d({
+            kernelSize: 3,
+            filters,
+            activation: "relu",
+            padding: "same",
+            depthwiseInitializer: "glorotNormal",
+            pointwiseInitializer: "glorotNormal",
+        })
+        .apply(filter1norm);
+    const dropout = tf.layers.dropout({ rate: 0.3 }).apply(filter2);
+    const batchNorm = batchNormRelu(dropout);
+    
+    // Residual connection - here we sum up first matrix and the result of 2 convolutions
+    const residual = tf.layers.add().apply([filter1, batchNorm]);
+    return residual;
+};
+
+
+// ResNet - put all together
+const modelResNet = () => {
+    const input = tf.input({ shape: [128, 144, 3] });
+    const conv1_filter = tf.layers.conv2d({kernelSize:5, filters:16, strides:2, activation:"relu", padding:"same", kernelInitializer: "glorotNormal"}).apply(input);
+    const conv1 = tf.layers.maxPooling2d({poolSize:[3,3],strides:[2,2],padding:"same"}).apply(batchNormRelu(conv1_filter));
+    const residual2 = residualBlock(conv1, 16, true);
+    const residual3 = residualBlock(residual2, 32);
+    const residual4 = residualBlock(residual3, 64);
+    const residual5 = residualBlock(residual4, 128);
+    const conv5 = tf.layers.avgPool2d({poolSize:[8,8], strides:[1,1],}).apply(residual5);
+    const flatten = tf.layers.flatten().apply(conv5);
+    const dropout = tf.layers.dropout({ rate: 0.5 }).apply(flatten);
+    const dense = tf.layers.dense({units: 2,kernelInitializer: "glorotNormal",activation: "softmax"}).apply(dropout);
+    return tf.model({inputs: input,outputs: dense});
+};
+
+function makemodel(inputShape,classes) {
+  /*
   var input = tf.input({shape:inputShape});
   var c1 = conv2d(16,3).apply(input);
   var c1 = conv2d(16,3).apply(c1);
@@ -71,6 +116,8 @@ function makemodel(inputShape,classes) {
   var output = tf.layers.dense({units:classes, activation:"softmax"}).apply(c1);
   var model = tf.model({inputs:input,outputs:output});
   model.compile({optimizer:tf.train.adam(),loss:'categoricalCrossentropy',metrics:['accuracy']});
+  */
+  var model = modelResNet();
   return model;
 }
 
@@ -83,17 +130,25 @@ window.onload = async function() {
   //var div = newhtml("div",{style:{width:"100%",height:300,borderWidth:1,borderColor:"#111",borderStyle:"solid"}},document.body);
   visualizeModel(modelview, model);
 
-
   var fitCallbacks = await tfvis.show.fitCallbacks(trainview,["loss", "val_loss", "acc", "val_acc"]);
   fitCallbacks.onBatchEnd = undefined;
 
   for (var l in tf.layers) {
-    newhtml("div",{innerText:l},layerscontainer);
+    var addlayercontainer = newhtml("div",{innerText:l},layerscontainer);
+    addlayercontainer.onclick = function(){
+      /*
+      var clname = this.innerText;
+      var props = {};
+      if (clname=="conv2d") props = {kernelSize:[3,3],padding:"same",filters:5,strides:1,activation:'relu',kernelInitializer:'varianceScaling'};
+      var layer = tf.layers[clname](props);
+      var box = newbox(layer);
+      */
+      var box = newbox({getClassName:()=>this.innerText});
+      getTransforms(box).setTranslate(50, 50);
+    };
   }
 
   setInterval(showmemory, 500);
-
-
 
   /*
   for (var i=0;i<2000;i++) {
@@ -126,6 +181,7 @@ window.onload = async function() {
 </script>
 
 <script>
+
 function newhtml(tag,attributes,ths) {
   if (tag=="svg" || tag=="rect" || tag=="g" || tag=="text" || tag=="polyline" || tag=="circle" || tag=="filter" || tag=="feDropShadow") {
     var xmlns = "http://www.w3.org/2000/svg";
@@ -266,10 +322,41 @@ async function joinStartInstrument(obj1) {
 async function joinEndInstrument(obj1) {
   var p0 = await coord("onmouseup",svg,obj1);
   if (window.ware) {
-    console.log(window.ware);
+    //console.log(window.ware);
     window.ware.end = obj1;
+
+    //console.log(window.ware.start.parentNode.layer.getClassName());
+    //console.log(window.ware.end.parentNode.layer.getClassName());
+
+    var outLayer = window.ware.end.parentNode.layer;
+    var outBox = window.ware.end.parentNode;
+    var inBox = window.ware.start.parentNode;
+
+    var inputShape = outLayer.output?.shape.slice(1);
+    
+    var clname = window.ware.start.parentNode.layer.getClassName();
+    //clname = clname[0].toLowerCase()+clname.slice(1);
+
+    //console.log(clname);
+    var props = {};
+    if (clname=="inputLayer") props = {inputShape}
+    //if (clname=="conv2d") props = {kernelSize:[3,3],padding:"same",filters:5,strides:1,activation:'relu',kernelInitializer:'varianceScaling'};
+    if (clname.toLowerCase().indexOf("conv")>-1) props = {kernelSize:3,filters:5,ndim:3};
+    if (clname=="cropping2D") props = {cropping:2}
+
+    
+    try {
+      inBox.layer = tf.layers[clname](props).apply(outLayer);
+      newhtml("div",{innerText:"connected"},logger);
+    } catch(e) {
+      newhtml("div",{innerText:e.message},logger);
+      window.ware.parentNode.removeChild(window.ware)
+    }
+    
+    
     window.ware.connected = true;
     window.ware = false;
+
   }
   joinEndInstrument(obj1);
 }
@@ -297,15 +384,12 @@ async function loadModel(data,fname) {
   if (!fname) fname = data[0].key.split("/")[1];
   console.log("fname="+fname);
   for(var i=0; i<data.length; i++) {
-
     localStorage.setItem(data[i].key, data[i].data);
   }
   return await tf.loadLayersModel("localstorage://"+fname);
 }
 
 function visualizeModel(div, model) {
-
-
   var divBB = [div.getBoundingClientRect().width,div.getBoundingClientRect().height];
   divBB = round(scale(divBB,0.2),1);
   //alert(divBB)
@@ -324,7 +408,6 @@ function visualizeModel(div, model) {
       catch (e) {reject()}
     });
   }
-
   
   function readFileList(folder) {
     //while (!folder.webkitGetAsEntry()) x=1
@@ -387,6 +470,9 @@ function visualizeModel(div, model) {
         saveModelLink(model, "policyNet", savecontainer);        
       }
       if (file.name.indexOf(".jpg")>-1) {
+
+        const t0 = performance.now();
+
         //alert("картинка");
         var blob = new Blob([file], {type: 'image/jpeg'});
         var image = await newimg(URL.createObjectURL(blob));
@@ -398,8 +484,15 @@ function visualizeModel(div, model) {
         }
         var p = (await div.model.predict(xs)).unstack()[0].dataSync();
         p = Array.from(p);
-        if (p[0]>p[1]) console.log("MOVE")
-        else console.log("OK");
+
+        const t1 = performance.now();
+
+        var nd;
+        if (p[0]>p[1]) nd = newhtml("div",{innerText:"MOVE "+p[0]},logger);
+        else nd = newhtml("div",{innerText:"OK "+p[0]},logger);
+        nd.innerText += ", "+(t1 - t0);
+
+
         xs.dispose();
       }
     }
@@ -474,55 +567,40 @@ function showLayerProperty(layer) {
   }
 }
 
-function newnode(props) {
-  var box = {x:0,y:0,w:10,h:15,layer:props.layer};
-  box.rend = function (coord) {
-    var [x,y,w,h] = [this.x,this.y,this.w,this.h];
-    var p = 2;
-    g = newhtml("g",{},svg);
-    var titl = newhtml("rect",{x:x,y:y,width:w,height:h,fill:"white",box:this,stroke:"#000","stroke-width":0.5},g);
-    moveInstrment(titl);
-    newhtml("text",{x:x+1,y:y+3,textContent:(props.name||"node"),fill:'#000',style:{fontSize:"3px",pointerEvents:"none"}},g);
-    newhtml("text",{x:x+1,y:y+8,textContent:(props.inputShape||"node"),fill:'#000',style:{fontSize:"3px",pointerEvents:"none"}},g);
-    newhtml("text",{x:x+1,y:y+13,textContent:(props.outputShape||"node"),fill:'#000',style:{fontSize:"3px",pointerEvents:"none"}},g);
-    var inio = newhtml("circle",{cx:x-p,cy:y+h/2,r:p,box:box,id:props.id+"_in"},g);
-    joinStartInstrument(inio);
-    joinEndInstrument(inio);
-    var ouio = newhtml("circle",{cx:x+w+p,cy:y+h/2+5,r:p,fill:"#000",box:box,id:props.id+"_out"},g);
-    joinStartInstrument(ouio);
-    joinEndInstrument(ouio);
-    box.g = g;
-    g.onclick = function() {showLayerProperty(box.layer)}
-    return this;
-  }
-  return box;
+function newbox(layer) {
+  var clname = layer.getClassName();
+  var id = layer.name?.toString();
+  //console.log(clname+"..."+layer.input);
+  var inputShape;
+  if (Array.isArray(layer.input)) inputShape = layer.input?.map((a)=>a.toString()).join(";");
+  else inputShape = layer.input?.shape.toString().slice(1);
+
+  var outputShape = layer.output?.shape.toString().slice(1);
+  var [x,y,w,h,p] = [0,0,10,15,2];
+  g = newhtml("g",{layer:layer},svg);
+  var titl = newhtml("rect",{x:x,y:y,width:w,height:h,fill:"white",stroke:"#000","stroke-width":0.5},g);
+  moveInstrment(titl);
+  newhtml("text",{x:x+1,y:y+3,textContent:(clname||"node"),fill:'#000',style:{fontSize:"3px",pointerEvents:"none"}},g);
+  newhtml("text",{x:x+1,y:y+8,textContent:(inputShape||"node"),fill:'#000',style:{fontSize:"3px",pointerEvents:"none"}},g);
+  newhtml("text",{x:x+1,y:y+13,textContent:(outputShape||"node"),fill:'#000',style:{fontSize:"3px",pointerEvents:"none"}},g);
+  var inio = newhtml("circle",{cx:x-p,cy:y+h/2,r:p,id:id+"_in",fill:'#900'},g);
+  joinStartInstrument(inio);
+  //joinEndInstrument(inio);
+  var ouio = newhtml("circle",{cx:x+w+p,cy:y+h/2+5,r:p,fill:"#000",id:id+"_out"},g);
+  //joinStartInstrument(ouio);
+  joinEndInstrument(ouio);
+  g.onclick = function() {showLayerProperty(this.layer)}
+  return g;
 }
 
 function rendmodel(model) {
-
-  //alert(svg.childNodes.length);
   for (var i=svg.childNodes.length-1;i>=0;i--) {
     svg.removeChild(svg.childNodes[i]);
   }
-
-  //console.log("rendmodel")
   var nodes = model.layers.map(function(l,i){
-
-    var clname = l.getClassName();
-    if (clname.indexOf("MaxP")>-1) clname = "MaxP";
-    if (clname.indexOf("Norm")>-1) clname = "Norm";
-    if (clname.indexOf("Input")>-1) clname = "Input";
-
-    var node = newnode({
-      id:l.name.toString(),
-      name:clname,
-      inputShape:l.input.shape.toString().slice(1),
-      outputShape:l.output.shape.toString().slice(1),
-      layer:l
-    });
-    node.rend();
-    getTransforms(node.g).setTranslate(i*20+10, 10);
-    return node;
+    var box = newbox(l);
+    getTransforms(box).setTranslate(i*20+10, 10);
+    return box;
   });
   model.layers.map(function(l,i){
     l.inboundNodes[0].inboundLayers.map(function(s) {
@@ -533,9 +611,15 @@ function rendmodel(model) {
       }
     });
   });
+
+  var bb = [(model.layers.length)*20+10, modelview.getBoundingClientRect().height];
+  console.log(bb);
+  svg.setAttribute("viewBox", "0 0 "+bb.join(" ")); 
+  svg.style.width = bb[0];
+  svg.style.height = bb[1];
+
   updatePolylines();
 }
-
 
 </script>
 
