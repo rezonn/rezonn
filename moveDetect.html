@@ -200,8 +200,8 @@ window.onload = async function(){
       if (movei>parseFloat(localStorage.getItem("move"))) {
         var blob = await (new Promise(resolve=>canvas.toBlob(resolve)));
         var dc = new Date();
-        dc = dc.getDate()+"T"+two(dc.getHours())+two(dc.getMinutes())+" "+two(dc.getSeconds())+dc.getMilliseconds();
-        file = "/home/"+dc+"_"+name+".jpg";
+        var tim = two(dc.getHours())+two(dc.getMinutes())+" "+two(dc.getSeconds())+dc.getMilliseconds();
+        file = "/home/"+dc.getDate()+"/"+tim+".jpg";
         blob2dropbox(blob,file);
       }
       state.dsp("move "+movei, 1);
