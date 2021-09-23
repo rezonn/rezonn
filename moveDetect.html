@@ -146,7 +146,8 @@ window.onload = async function(){
   video.style.width = "1px";video.style.height = "1px";
 
   var table = newhtml("table",{width:"100%"},LOG);
-  ["dropbox","move","dark"].map(function(field){
+  //["dropbox","move","dark"].map(function(field){
+  ["dropbox","move].map(function(field){
     var tr = newhtml("tr",{},table);
     newhtml("td",{innerText:field},tr);
     var td = newhtml("td",{},tr);
@@ -167,7 +168,8 @@ window.onload = async function(){
     var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
     await blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
   },60000);
-
+  
+  /*
   (async function loop() {
     const left = tf.browser.fromPixels(video,3);
     const cutted = cut(left,0.4,0.35,0.4,0.35);
@@ -184,6 +186,7 @@ window.onload = async function(){
     bright.dispose();
     window.requestAnimationFrame(loop);
   })();
+  */
 
   var two = (num)=>(num.toString().length==1)?("0"+num):num;
 
@@ -203,6 +206,9 @@ window.onload = async function(){
         var tim = two(dc.getHours())+"_"+two(dc.getMinutes())+"_"+two(dc.getSeconds())+"_"+dc.getMilliseconds();
         file = "/home/"+dc.getDate()+"/"+tim+".jpg";
         blob2dropbox(blob,file);
+      }
+      else if (movei==0) {
+        beep();
       }
       state.dsp("move "+movei, 1);
       diff.dispose();
