@@ -169,11 +169,12 @@ window.onload = async function(){
     await blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
   },60000);
   
-  /*
+  
   (async function loop() {
     const left = tf.browser.fromPixels(video,3);
     const cutted = cut(left,0.4,0.35,0.4,0.35);
     tf.browser.toPixels(cutted, canvas);
+    /*
     const bright = cutted.max();
     var brighti = await bright.data();
     if (brighti<parseFloat(localStorage.getItem("dark"))) {
@@ -181,12 +182,13 @@ window.onload = async function(){
       beep();
     }
     state.dsp("bright "+brighti, 0);
+    bright.dispose();
+    */
     left.dispose();
     cutted.dispose();
-    bright.dispose();
     window.requestAnimationFrame(loop);
   })();
-  */
+  
 
   var two = (num)=>(num.toString().length==1)?("0"+num):num;
 
