@@ -1,20 +1,64 @@
 <html>
 <meta charset="UTF-8">
 <style>
+
 * {background:none;}
 body {background:#555;margin:0;}
 div {padding-left:4;padding-right:4;}
 input {border-width:1;border-color:#000;border-style:solid}
-#modelview {position:absolute;top:0;bottom:300;left:0;right:0;border-width:1;border-color:#111;border-style:solid;overflow:scroll;}
-#commands {position:absolute;height:300;bottom:0;left:0;width:200;background-color:#655;overflow-y:auto;}
-#trainview {position:absolute;height:300;bottom:0;left:75%;right:0;background-color:#655;overflow-y:auto;}
-#propertycontainer {position:absolute;height:300;bottom:0;left:200;width:200;background-color:#556;overflow-y:auto;}
-#commoncontainer {position:absolute;height:300;bottom:0;left:400;width:200;background-color:#565;overflow-y:auto;}
+#modelview {position:absolute;top:0;bottom:200;left:0;right:0;border-width:1;border-color:#111;border-style:solid;overflow:scroll;}
+#commands {position:absolute;height:200;bottom:0;left:0;width:200;background-color:#655;overflow-y:auto;}
+#trainview {position:absolute;height:200;bottom:0;left:75%;right:0;background-color:#655;overflow-y:auto;}
+#propertycontainer {position:absolute;height:200;bottom:0;left:200;width:200;background-color:#556;overflow-y:auto;}
+#commoncontainer {position:absolute;height:200;bottom:0;left:400;width:200;background-color:#565;overflow-y:auto;}
 #state {position:absolute;z-index:2;top:5;height:80;right:5;width:120;background-color:#656;color:#fff;}
-#logger {position:absolute;height:300;bottom:0;left:600;right:25%;background-color:#444;overflow-y:auto;color:white;}
+#logger {position:absolute;height:200;bottom:0;left:600;right:25%;background-color:#444;overflow-y:auto;color:white;}
 </style>
 <script src="tf.min.js"></script>
 <script src="tfjs-vis.min.js"></script>
+<script type="text/tftypes" id="reference">
+tf.layers.embedding
+  inputDim (number) Integer > 0
+  outputDim (number) Integer >= 0
+  embeddingsInitializer ('constant'|'glorotNormal'|'glorotUniform'|'heNormal'|'heUniform'|'identity'| 'leCunNormal'|'leCunUniform'|'ones'|'orthogonal'|'randomNormal'| 'randomUniform'|'truncatedNormal'|'varianceScaling'|'zeros'|string|tf.initializers.Initializer)
+  embeddingsRegularizer ('l1l2'|string|Regularizer)
+  activityRegularizer ('l1l2'|string|Regularizer)
+  embeddingsConstraint ('maxNorm'|'minMaxNorm'|'nonNeg'|'unitNorm'|string|tf.constraints.Constraint)
+  maskZero (boolean)
+  inputLength (number|number[])
+  inputShape ((null | number)[])
+  batchInputShape ((null | number)[])
+  batchSize (number)
+  dtype ('float32'|'int32'|'bool'|'complex64'|'string')
+  name (string)
+  trainable (boolean)
+  weights (tf.Tensor[])
+  inputDType ('float32'|'int32'|'bool'|'complex64'|'string')
+tf.layers.conv2d
+  filters (number)
+  kernelSize (number|number[])
+  strides (number|number[])
+  padding ('valid'|'same'|'causal')
+  dataFormat ('channelsFirst'|'channelsLast')
+  dilationRate (number|[number]|[number, number]|[number, number, number])
+  activation ('elu'|'hardSigmoid'|'linear'|'relu'|'relu6'|'selu'|'sigmoid'|'softmax'|'softplus'|'softsign'|'tanh'|'swish'|'mish')
+  useBias (boolean)
+  kernelInitializer ('constant'|'glorotNormal'|'glorotUniform'|'heNormal'|'heUniform'|'identity'| 'leCunNormal'|'leCunUniform'|'ones'|'orthogonal'|'randomNormal'| 'randomUniform'|'truncatedNormal'|'varianceScaling'|'zeros'|string|tf.initializers.Initializer)
+  biasInitializer ('constant'|'glorotNormal'|'glorotUniform'|'heNormal'|'heUniform'|'identity'| 'leCunNormal'|'leCunUniform'|'ones'|'orthogonal'|'randomNormal'| 'randomUniform'|'truncatedNormal'|'varianceScaling'|'zeros'|string|tf.initializers.Initializer)
+  kernelConstraint ('maxNorm'|'minMaxNorm'|'nonNeg'|'unitNorm'|string|tf.constraints.Constraint)
+  biasConstraint ('maxNorm'|'minMaxNorm'|'nonNeg'|'unitNorm'|string|tf.constraints.Constraint)
+  kernelRegularizer ('l1l2'|string|Regularizer)
+  biasRegularizer ('l1l2'|string|Regularizer)
+  activityRegularizer ('l1l2'|string|Regularizer)
+  inputShape ((null | number)[])
+  batchInputShape ((null | number)[])
+  batchSize (number)
+  dtype ('float32'|'int32'|'bool'|'complex64'|'string') 
+  name (string)
+  trainable (boolean)
+  weights (tf.Tensor[])
+  inputDType ('float32'|'int32'|'bool'|'complex64'|'string') 
+</script>
 <script>
 
 async function makeData(count, func) {
@@ -109,7 +153,69 @@ function makemodel(inputShape,classes) {
   return model;
 }
 
+function addLayer(cl) {
+  var box = newbox({getClassName:()=>cl});
+  getTransforms(box).setTranslate(50, 50);
+}
+
+function parseReference(str, cont) {
+  str = str.split("\n");
+  for (var i=1,layer,rv={};i<str.length;i++) {
+    var line = str[i];
+    if (line.indexOf("  ")!=0 && line.split(/\./).length==3) {
+      layer = line.split(/\./)[2];
+      rv[layer] = [];
+    }
+    else {
+      //console.log(line.slice(2).split(" ")[1])
+      rv[layer].push({
+        name:line.slice(2).split(" ")[0],
+        values:line.slice(2).split(" ")[1]?.split(/[\(\)]/).join("").split(/\|/)||[]
+      });
+    }
+  }
+
+  //console.log(rv[selectedLayer])
+
+  var selectedLayer = "conv2d";
+  var props = rv[selectedLayer];
+
+  //console.log(rv[selectedLayer]);
+
+  props.filter(p=>p.name).map(p=>{
+    var listName = p.name+"_list";
+    var inputId = p.name+"_input";
+    //console.log(p.name);
+    newhtml("div",{innerText:p.name},cont);
+    
+    var datalist = newhtml("datalist",{id:listName},cont);
+    p.values.map(v=>{
+      //console.log(v)
+      newhtml("option",{value:v},datalist)
+    });
+    newhtml("input",{list:listName,id:inputId},cont);
+  })
+
+  /*
+    <input id="layerContainer" list="layerList"><datalist id="layerList"></datalist>
+  <div id="layerscontainer"></div>
+  */
+
+
+  ///cont.innerText = "lk;l"
+  return rv;
+}
+
 window.onload = async function() {
+
+  var rg = parseReference(reference.innerText, layerspropcontainer);
+
+
+
+
+  //layerspropcontainer = 
+  //console.log(rg)
+
   var classes = 5;
   var [w,h] = [28,28];
 
@@ -121,20 +227,15 @@ window.onload = async function() {
   var fitCallbacks = await tfvis.show.fitCallbacks(trainview,["loss", "val_loss", "acc", "val_acc"]);
   fitCallbacks.onBatchEnd = undefined;
 
+  /*
   for (var l in tf.layers) {
     var addlayercontainer = newhtml("div",{innerText:l},layerscontainer);
     addlayercontainer.onclick = function(){
-      /*
-      var clname = this.innerText;
-      var props = {};
-      if (clname=="conv2d") props = {kernelSize:[3,3],padding:"same",filters:5,strides:1,activation:'relu',kernelInitializer:'varianceScaling'};
-      var layer = tf.layers[clname](props);
-      var box = newbox(layer);
-      */
       var box = newbox({getClassName:()=>this.innerText});
       getTransforms(box).setTranslate(50, 50);
     };
   }
+  */
 
   setInterval(showmemory, 500);
 
@@ -164,6 +265,23 @@ window.onload = async function() {
   }
   */
 
+  for (var x in tf.losses) {
+    newhtml("option",{value:x},LossList);
+  }
+
+  for (var x in tf.train) {
+    newhtml("option",{value:x},optimizersList);
+  }
+
+  for (var x in tf.layers) {
+    newhtml("option",{value:x},layerList)
+  }
+
+
+  //optimizers
+
+  //LossList
+
 }
 
 </script>
@@ -191,7 +309,8 @@ function newhtml(tag,attributes,ths) {
   else {
     var rv = document.createElement(tag);
     for (var x in attributes) {
-      if (x!="style") rv[x] = attributes[x];
+      if (x=="id" || x=="list") rv.setAttribute(x,attributes[x]);
+      else if (x!="style") rv[x] = attributes[x];
       else {
         for (var s in attributes[x]) {
           rv.style[s] = attributes[x][s];
@@ -370,7 +489,7 @@ async function saveModelLink(model, fname, parentNode) {
 
 async function loadModel(data,fname) {
   if (!fname) fname = data[0].key.split("/")[1];
-  console.log("fname="+fname);
+  //console.log("fname="+fname);
   for(var i=0; i<data.length; i++) {
     localStorage.setItem(data[i].key, data[i].data);
   }
@@ -523,7 +642,7 @@ function visualizeModel(div, model) {
           data[i].dispose();
           //labels[i].dispose();
         }
-        console.log(titles)
+        //console.log(titles)
         ys.print();
         xs.print();
         model = makemodel(xs.shape.slice(1), classes);
@@ -553,7 +672,7 @@ function visualizeModel(div, model) {
 
 function showLayerProperty(layer) {
   propertycontainer.innerHTML = "";
-  console.log(layer);
+  //console.log(layer);
   for (var x in layer) {
     if (typeof(layer[x])!="function")
     newhtml("div",{innerText:x+":"+layer[x]},propertycontainer);
@@ -591,7 +710,9 @@ function rendmodel(model) {
   }
   var nodes = model.layers.map(function(l,i){
     var box = newbox(l);
-    getTransforms(box).setTranslate(i*20+10, 10);
+    var y = box.layer.outboundNodes.length*10;
+    if (box.layer.getClassName()=="Add") y = 20;
+    getTransforms(box).setTranslate(i*20+10, y);
     return box;
   });
   model.layers.map(function(l,i){
@@ -607,7 +728,7 @@ function rendmodel(model) {
   var bb = [(model.layers.length)*20+10, modelview.getBoundingClientRect().height];
   bb[1] = bb[1]/5>>0;
   bb1 = scale(bb,5);
-  console.log(bb);
+  //console.log(bb);
   svg.style.width = bb1[0];
   svg.style.height = bb1[1];
   svg.style.backgroundColor = "#777"
@@ -619,18 +740,26 @@ function rendmodel(model) {
 
 </script>
 
+
+
 <body>
 <div id="modelview"></div>
 <div id="commands">
+  <input id="layerContainer" list="layerList"><datalist id="layerList"></datalist>
   <div id="layerscontainer"></div>
+  <div id="layerspropcontainer"></div>
+  <button onclick="addLayer(layerContainer.value)">Add</button>
 </div>
 <div id="propertycontainer"></div>
 <div id="commoncontainer">
   <div>Save:<span id="savecontainer"></span></div>
   <div>Load:</div>
   <div>Input:</div>
-  <div>Loss:</div>
-  <div>Optimizator:</div>
+  <div>Loss:
+  <input name="lossContainer" list="LossList" size="20"><datalist id="LossList"></datalist>
+  </div>
+  <div>Optimizer:</div>
+  <input name="optimizersContainer" list="optimizersList"><datalist id="optimizersList"></datalist>
   <div>LimitInp:<input type="" id="LimitInp" value="10" inputmode="numeric" size="10"></div>
   <div>EpochCount:<input type="" id="epochCount" value="30" inputmode="numeric" size="10"></div>
   <div><button id="train" onclick="fitModel()">Train</button></div>
