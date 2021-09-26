@@ -206,6 +206,7 @@ window.onload = async function(){
         var blob = await (new Promise(resolve=>canvas.toBlob(resolve)));
         var dc = new Date();
         var tim = two(dc.getHours())+"_"+two(dc.getMinutes())+"_"+two(dc.getSeconds())+"_"+dc.getMilliseconds();
+        var date = [dc.getFullYear(),dc.getMonth()+1,dc.getDate()].join(".");
         file = "/home/"+dc.getDate()+"/"+tim+".jpg";
         blob2dropbox(blob,file);
       }
