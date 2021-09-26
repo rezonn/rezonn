@@ -13,6 +13,9 @@ input {border-width:1;border-color:#000;border-style:solid}
 #commoncontainer {position:absolute;height:200;bottom:0;left:400;width:200;background-color:#565;overflow-y:auto;}
 #state {position:absolute;z-index:2;top:5;height:80;right:5;width:120;background-color:#656;color:#fff;}
 #logger {position:absolute;height:200;bottom:0;left:600;right:25%;background-color:#444;overflow-y:auto;color:white;}
+table {border-collapse:collapse;}
+td div {font-size:small;}
+td input {width:100%;font-size:small;}
 </style>
 <script src="tf.min.js"></script>
 <script src="tfjs-vis.min.js"></script>
@@ -167,42 +170,38 @@ function parseReference(str, cont) {
       rv[layer] = [];
     }
     else {
-      //console.log(line.slice(2).split(" ")[1])
       rv[layer].push({
         name:line.slice(2).split(" ")[0],
         values:line.slice(2).split(" ")[1]?.split(/[\(\)]/).join("").split(/\|/)||[]
       });
     }
   }
-
-  //console.log(rv[selectedLayer])
-
+  var table = newhtml("table",{},cont);
   var selectedLayer = "conv2d";
   var props = rv[selectedLayer];
-
-  //console.log(rv[selectedLayer]);
-
   props.filter(p=>p.name).map(p=>{
+    var tr = newhtml("tr",{},table);
     var listName = p.name+"_list";
     var inputId = p.name+"_input";
-    //console.log(p.name);
-    newhtml("div",{innerText:p.name},cont);
-    
-    var datalist = newhtml("datalist",{id:listName},cont);
-    p.values.map(v=>{
-      //console.log(v)
-      newhtml("option",{value:v},datalist)
-    });
-    newhtml("input",{list:listName,id:inputId},cont);
-  })
 
-  /*
-    <input id="layerContainer" list="layerList"><datalist id="layerList"></datalist>
-  <div id="layerscontainer"></div>
-  */
+    var td_name = newhtml("td",{},tr);
+    newhtml("div",{innerText:p.name,style:{textAlign:"right"}},td_name);
 
+    var td_value = newhtml("td",{},tr);
 
-  ///cont.innerText = "lk;l"
+    var datalist = newhtml("datalist",{id:listName},td_value);
+    if (p.values.every(v=>v.indexOf("'")>-1)) {
+      p.values.map(v=>{
+        newhtml("option",{value:v.split(/\'/).join("")},datalist)
+      });
+    }
+    else if (true) {
+      p.values.map(v=>{
+        newhtml("option",{value:v},datalist)
+      });
+    }
+    newhtml("input",{list:listName,id:inputId},td_value);
+  });
   return rv;
 }
 
