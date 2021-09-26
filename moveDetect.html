@@ -207,7 +207,7 @@ window.onload = async function(){
         var dc = new Date();
         var tim = two(dc.getHours())+"_"+two(dc.getMinutes())+"_"+two(dc.getSeconds())+"_"+dc.getMilliseconds();
         var date = [dc.getFullYear(),dc.getMonth()+1,dc.getDate()].join(".");
-        file = "/home/"+dc.getDate()+"/"+tim+".jpg";
+        file = "/home/"+date+"/"+tim+".jpg";
         blob2dropbox(blob,file);
       }
       else if (movei==0) {
