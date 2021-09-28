@@ -168,7 +168,10 @@ window.onload = async function(){
     var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDate(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
     var rs = await blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
     rs = await rs.text();
-    state.dsp(rs, 0);
+    if (rs.indexOf("error")>-1) {
+      beep();
+      state.dsp("error", 0);
+    }
   },60000);
   
   
