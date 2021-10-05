@@ -184,7 +184,7 @@ window.onload = async function(){
       tf.browser.toPixels(cutted, canvas);      
     } catch(e) {
       beep();
-      state.dsp("ok error", 0);
+      state.dsp("video error", 0);
     }
     left.dispose();
     cutted.dispose();
@@ -194,35 +194,47 @@ window.onload = async function(){
   var two = (num)=>(num.toString().length==1)?("0"+num):num;
 
   (async function loop2() {
-    const left = tf.browser.fromPixels(canvas,1);
-    await sleep(1000);
-    const right = tf.browser.fromPixels(canvas,1);
-    if (left.shape[0]==right.shape[0]) {
-      const diff = left.sub(right);
-      const nonz = diff.clipByValue(0,150)
-      const non2 = nonz.toInt();
-      const move = nonz.max();
-      var movei = await move.data();
-      if (movei>parseFloat(localStorage.getItem("move"))) {
-        var blob = await (new Promise(resolve=>canvas.toBlob(resolve)));
-        var dc = new Date();
-        var tim = two(dc.getHours())+"_"+two(dc.getMinutes())+"_"+two(dc.getSeconds())+"_"+dc.getMilliseconds();
-        var date = [dc.getFullYear(),dc.getMonth()+1,dc.getDate()].join(".");
-        file = "/home/"+date+"/"+tim+".jpg";
-        blob2dropbox(blob,file);
+    var diff = tf.tensor([1]);
+    var move = tf.tensor([1]);
+    var nonz = tf.tensor([1]);
+    var non2 = tf.tensor([1]);
+    var left = tf.tensor([1]);
+    var right = tf.tensor([1]);
+    
+    try {
+      const left = tf.browser.fromPixels(canvas,1);
+      await sleep(1000);
+      const right = tf.browser.fromPixels(canvas,1);
+      if (left.shape[0]==right.shape[0]) {
+        diff = left.sub(right);
+        nonz = diff.clipByValue(0,150)
+        non2 = nonz.toInt();
+        move = nonz.max();
+        var movei = await move.data();
+        if (movei>parseFloat(localStorage.getItem("move"))) {
+          var blob = await (new Promise(resolve=>canvas.toBlob(resolve)));
+          var dc = new Date();
+          var tim = two(dc.getHours())+"_"+two(dc.getMinutes())+"_"+two(dc.getSeconds())+"_"+dc.getMilliseconds();
+          var date = [dc.getFullYear(),dc.getMonth()+1,dc.getDate()].join(".");
+          file = "/home/"+date+"/"+tim+".jpg";
+          blob2dropbox(blob,file);
+        }
+        else if (movei==0) {
+          beep();
+        }
+        state.dsp("move "+movei, 1);
+        state.dsp("tensors "+tf.memory().numTensors, 2);
+        state.dsp("bytes "+(tf.memory().numBytesInGPU/1000000>>0)+"Mb", 3);
       }
-      else if (movei==0) {
-        beep();
-      }
-      state.dsp("move "+movei, 1);
-      diff.dispose();
-      move.dispose();
-      nonz.dispose();
-      non2.dispose();
-      state.dsp("tensors "+tf.memory().numTensors, 2);
-      state.dsp("bytes "+(tf.memory().numBytesInGPU/1000000>>0)+"Mb", 3);
-      // state.dsp("/"+(tf.memory().numBytes/1000000>>0)+"Mb", 3);
+    } catch(e) {
+      beep();
+      state.dsp("compare error", 0);
     }
+    
+    diff.dispose();
+    move.dispose();
+    nonz.dispose();
+    non2.dispose();
     left.dispose();
     right.dispose();
     window.requestAnimationFrame(loop2);
