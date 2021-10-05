@@ -170,25 +170,22 @@ window.onload = async function(){
     rs = await rs.text();
     if (rs.indexOf("error")>-1) {
       beep();
-      state.dsp("error", 0);
+      state.dsp("ok error", 0);
     }
   },60000);
   
   
   (async function loop() {
-    const left = tf.browser.fromPixels(video,3);
-    const cutted = cut(left,0.4,0.35,0.4,0.35);
-    tf.browser.toPixels(cutted, canvas);
-    /*
-    const bright = cutted.max();
-    var brighti = await bright.data();
-    if (brighti<parseFloat(localStorage.getItem("dark"))) {
-      //console.log("bright "+brighti);
+    var left = tf.tensor([1]);
+    var cutted = tf.tensor([1]);
+    try {
+      left = tf.browser.fromPixels(video,3);
+      cutted = cut(left,0.4,0.35,0.4,0.35);
+      tf.browser.toPixels(cutted, canvas);      
+    } catch(e) {
       beep();
+      state.dsp("ok error", 0);
     }
-    state.dsp("bright "+brighti, 0);
-    bright.dispose();
-    */
     left.dispose();
     cutted.dispose();
     window.requestAnimationFrame(loop);
