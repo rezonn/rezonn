@@ -202,9 +202,9 @@ window.onload = async function(){
     var right = tf.tensor([1]);
     
     try {
-      const left = tf.browser.fromPixels(canvas,1);
+      left = tf.browser.fromPixels(canvas,1);
       await sleep(1000);
-      const right = tf.browser.fromPixels(canvas,1);
+      right = tf.browser.fromPixels(canvas,1);
       if (left.shape[0]==right.shape[0]) {
         diff = left.sub(right);
         nonz = diff.clipByValue(0,150)
