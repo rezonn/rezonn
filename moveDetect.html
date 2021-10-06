@@ -211,6 +211,7 @@ window.onload = async function(){
         }
         else if (movei==0) {
           beep();
+          state.dsp("0 move", 0);
         }
         state.dsp("move "+movei, 1);
         state.dsp("tensors "+tf.memory().numTensors, 2);
