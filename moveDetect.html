@@ -174,42 +174,32 @@ window.onload = async function(){
     }
   },60000);
   
-  
   (async function loop() {
-    var left = tf.tensor([1]);
-    var cutted = tf.tensor([1]);
     try {
-      left = tf.browser.fromPixels(video,3);
-      cutted = cut(left,0.4,0.35,0.4,0.35);
-      tf.browser.toPixels(cutted, canvas);      
+      const left = tf.browser.fromPixels(video,3);
+      const cutted = cut(left,0.4,0.35,0.4,0.35);
+      tf.browser.toPixels(cutted, canvas);
+      left.dispose();
+      cutted.dispose();
     } catch(e) {
       beep();
       state.dsp("video error", 0);
     }
-    left.dispose();
-    cutted.dispose();
     window.requestAnimationFrame(loop);
   })();
   
   var two = (num)=>(num.toString().length==1)?("0"+num):num;
 
   (async function loop2() {
-    var diff = tf.tensor([1]);
-    var move = tf.tensor([1]);
-    var nonz = tf.tensor([1]);
-    var non2 = tf.tensor([1]);
-    var left = tf.tensor([1]);
-    var right = tf.tensor([1]);
-    
     try {
-      left = tf.browser.fromPixels(canvas,1);
+      const left = tf.browser.fromPixels(canvas,1);
       await sleep(1000);
-      right = tf.browser.fromPixels(canvas,1);
+      const right = tf.browser.fromPixels(canvas,1);
       if (left.shape[0]==right.shape[0]) {
-        diff = left.sub(right);
-        nonz = diff.clipByValue(0,150)
-        non2 = nonz.toInt();
-        move = nonz.max();
+        const diff = left.sub(right);
+        const nonz = diff.clipByValue(0,150)
+        const non2 = nonz.toInt();
+        const move = nonz.max();
         var movei = await move.data();
         if (movei>parseFloat(localStorage.getItem("move"))) {
           var blob = await (new Promise(resolve=>canvas.toBlob(resolve)));
@@ -225,18 +215,19 @@ window.onload = async function(){
         state.dsp("move "+movei, 1);
         state.dsp("tensors "+tf.memory().numTensors, 2);
         state.dsp("bytes "+(tf.memory().numBytesInGPU/1000000>>0)+"Mb", 3);
+        
+        diff.dispose();
+        move.dispose();
+        nonz.dispose();
+        non2.dispose();
+        left.dispose();
+        right.dispose();
       }
     } catch(e) {
       beep();
       state.dsp("compare error", 0);
     }
     
-    diff.dispose();
-    move.dispose();
-    nonz.dispose();
-    non2.dispose();
-    left.dispose();
-    right.dispose();
     window.requestAnimationFrame(loop2);
   })();
 
