@@ -146,7 +146,7 @@ window.onload = async function(){
   video.style.width = "1px";video.style.height = "1px";
 
   var table = newhtml("table",{width:"100%"},LOG);
-  //["dropbox","move","dark"].map(function(field){
+
   ["dropbox","move"].map(function(field){
     var tr = newhtml("tr",{},table);
     newhtml("td",{innerText:field},tr);
