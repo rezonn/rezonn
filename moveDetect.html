@@ -16,7 +16,8 @@
 function newhtml(tag,attributes,ths) {
   var rv = document.createElement(tag);
   for (var x in attributes) {
-    if (x!="style") rv[x] = attributes[x];
+    if (x=="id" || x=="list") rv.setAttribute(x,attributes[x]);
+    else if (x!="style") rv[x] = attributes[x];
     else {
       for (var s in attributes[x]) {
         rv.style[s] = attributes[x][s];
@@ -70,7 +71,7 @@ async function dropbox2text(filename) {
     var resp = await fetch("https://content.dropboxapi.com/2/files/download", {
       method:'POST',
       headers:{
-        'Authorization':'Bearer '+localStorage.getItem("dropbox"),
+        'Authorization':'Bearer '+localStorage.getItem("dropbox")||dropbox_input.value,
         'Dropbox-API-Arg':JSON.stringify({path:filename})
       }
     });
@@ -97,7 +98,7 @@ async function blob2dropbox(blob,filename) {
     return await fetch("https://content.dropboxapi.com/2/files/upload", {
       method:'POST',
       headers:{
-        'Authorization':'Bearer '+localStorage.getItem("dropbox"),
+        'Authorization':'Bearer '+localStorage.getItem("dropbox")||dropbox_input.value,
         'Dropbox-API-Arg':JSON.stringify({path:filename,mode:"overwrite",autorename:true,mute:false}),
         'Content-Type':'application/octet-stream'
       },
@@ -151,7 +152,7 @@ window.onload = async function(){
     var tr = newhtml("tr",{},table);
     newhtml("td",{innerText:field},tr);
     var td = newhtml("td",{},tr);
-    newhtml("input",{value:localStorage.getItem(field),field:field,style:{background:"none"},onchange:function(){
+    newhtml("input",{value:localStorage.getItem(field),id:field+"_input",field:field,style:{background:"none"},onchange:function(){
       var v = this.value;
       var n = parseFloat(v);
       localStorage.setItem(field, (n+"")==v?n:v);
