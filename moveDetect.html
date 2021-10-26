@@ -71,7 +71,7 @@ async function dropbox2text(filename) {
     var resp = await fetch("https://content.dropboxapi.com/2/files/download", {
       method:'POST',
       headers:{
-        'Authorization':'Bearer '+localStorage.getItem("dropbox")||dropbox_input.value,
+        'Authorization':'Bearer '+(localStorage.getItem("dropbox")||dropbox_input.value),
         'Dropbox-API-Arg':JSON.stringify({path:filename})
       }
     });
@@ -94,11 +94,12 @@ function beep() {
 }
 
 async function blob2dropbox(blob,filename) {
+  var db = localStorage.getItem("dropbox");
   try {
     return await fetch("https://content.dropboxapi.com/2/files/upload", {
       method:'POST',
       headers:{
-        'Authorization':'Bearer '+localStorage.getItem("dropbox")||dropbox_input.value,
+        'Authorization':'Bearer '+(localStorage.getItem("dropbox")||dropbox_input.value),
         'Dropbox-API-Arg':JSON.stringify({path:filename,mode:"overwrite",autorename:true,mute:false}),
         'Content-Type':'application/octet-stream'
       },
