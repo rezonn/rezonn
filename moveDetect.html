@@ -208,7 +208,7 @@ window.onload = async function(){
         const non2 = nonz.toInt();
         const move = nonz.max();
         var movei = await move.data();
-        if (movei>parseFloat(localStorage.getItem("move"))) {
+        if (movei>parseFloat(localStorage.getItem("move")||move_input.value)) {
           var blob = await (new Promise(resolve=>canvas.toBlob(resolve)));
           var dc = new Date();
           var tim = two(dc.getHours())+"_"+two(dc.getMinutes())+"_"+two(dc.getSeconds())+"_"+dc.getMilliseconds();
