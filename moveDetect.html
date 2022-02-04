@@ -154,8 +154,8 @@ window.onload = async function(){
   }},LOG);
 
   setInterval(async function(){
+    var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDate(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
     try {
-      var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDate(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
       var rs = await blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
       rs = await rs.text();
       if (rs.indexOf("error")>-1) {
@@ -164,7 +164,7 @@ window.onload = async function(){
       }
     } catch(e) {
         beep();
-        state.dsp("ok error2", 0);
+        state.dsp("ok error2"+dc, 0);
     }
   },60000);
   
