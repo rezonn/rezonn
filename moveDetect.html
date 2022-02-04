@@ -65,19 +65,6 @@ async function allStreams(type) {
   }
   return rv;
 }
-
-async function dropbox2text(filename) {
-  try {
-    var resp = await fetch("https://content.dropboxapi.com/2/files/download", {
-      method:'POST',
-      headers:{
-        'Authorization':'Bearer '+(localStorage.getItem("dropbox")||dropbox_input.value),
-        'Dropbox-API-Arg':JSON.stringify({path:filename})
-      }
-    });
-    return await resp.text();
-  } catch(e) {console.log("fetch d error: "+e.message)}
-}
   
 function beep() {
   var actx = new (window.AudioContext || window.webkitAudioContext)();
