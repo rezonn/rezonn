@@ -164,7 +164,7 @@ window.onload = async function(){
       }
     } catch(e) {
         beep();
-        state.dsp("ok error2"+dc, 0);
+        state.dsp("ok error2 "+dc+" "++e.message, 0);
     }
   },60000);
   
