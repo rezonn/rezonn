@@ -66,7 +66,7 @@ async function allStreams(type) {
   return rv;
 }
   
-function beep(value, frequency) {
+function beep(value, frequency,time) {
   var actx = new (window.AudioContext || window.webkitAudioContext)();
   var node = actx.createGain();
   node.connect(actx.destination);
@@ -76,7 +76,7 @@ function beep(value, frequency) {
   oscl.type = 'sine'; 
   oscl.frequency.value = frequency||800;
   oscl.start();
-  window.setTimeout(function(){oscl.stop()},900);
+  window.setTimeout(function(){oscl.stop()},(time||900));
   return oscl;
 }
 
@@ -202,7 +202,7 @@ window.onload = async function(){
           var date = [dc.getFullYear(),dc.getMonth()+1,dc.getDate()].join(".");
           file = "/home/"+date+"/"+tim+".jpg";
           blob2dropbox(blob,file);
-          beep(50, 500);
+          beep(50, 500, 500);
         }
         else if (movei==0) {
           beep();
