@@ -66,17 +66,17 @@ async function allStreams(type) {
   return rv;
 }
   
-function beep(value, frequency,time) {
+function beep(value, frequency, time) {
   var actx = new (window.AudioContext || window.webkitAudioContext)();
   var node = actx.createGain();
   node.connect(actx.destination);
-  node.gain.value = value||80;
+  node.gain.value = value||20;
   var oscl = actx.createOscillator();
   oscl.connect(node); 
   oscl.type = 'sine'; 
-  oscl.frequency.value = frequency||800;
+  oscl.frequency.value = frequency||1100;
   oscl.start();
-  window.setTimeout(function(){oscl.stop()},(time||900));
+  window.setTimeout(function(){oscl.stop()},(time||30));
   return oscl;
 }
 
@@ -167,6 +167,10 @@ window.onload = async function(){
         state.dsp("ok error2 "+dc+" "+e.message, 0);
     }
   },60000);
+
+  setInterval(async function(){
+    if (window.beeptrue==true) beep();
+  },1000);
   
   (async function loop() {
     try {
@@ -175,8 +179,9 @@ window.onload = async function(){
       tf.browser.toPixels(cutted, canvas);
       left.dispose();
       cutted.dispose();
+      window.beeptrue=false;
     } catch(e) {
-      beep();
+      window.beeptrue=true;
       state.dsp("video error", 0);
     }
     window.requestAnimationFrame(loop);
@@ -202,10 +207,12 @@ window.onload = async function(){
           var date = [dc.getFullYear(),dc.getMonth()+1,dc.getDate()].join(".");
           file = "/home/"+date+"/"+tim+".jpg";
           blob2dropbox(blob,file);
-          beep(20,1100,30)
+          //beep(20,1100,30)
+          window.beeptrue==false;
         }
         else if (movei==0) {
-          beep();
+          //beep();
+          window.beeptrue=true;
           //state.dsp("0 move", 0);
         }
         state.dsp("move "+movei, 1);
@@ -220,7 +227,8 @@ window.onload = async function(){
         right.dispose();
       }
     } catch(e) {
-      beep();
+      //beep();
+      window.beeptrue==false;
       state.dsp("compare error", 0);
     }
     
