@@ -9,9 +9,6 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"></script>
 <script>
-//  * {color:#eee;}
-// #LOG  {position:absolute;z-index:11;left:0pt;width:100%;bottom:0pt;height:30%;overflow-y:auto;}
-// https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js
 
 function newhtml(tag,attributes,ths) {
   var rv = document.createElement(tag);
@@ -96,7 +93,7 @@ async function blob2dropbox(blob,filename) {
     });
   } catch(e) {
     console.log("fetch u error: "+e.message);
-    beep();
+    //beep();
   }
 }
 
@@ -158,7 +155,7 @@ window.onload = async function(){
         var dc = new Date();
         dc = dc.getDate()+"T"+two(dc.getHours())+two(dc.getMinutes())+" "+two(dc.getSeconds())+dc.getMilliseconds();
         file = "/home/"+dc+".jpg";
-        blob2dropbox(blob,file);
+        await blob2dropbox(blob,file);
     }
 
     LOG.innerText = "tensors "+tf.memory().numTensors;
