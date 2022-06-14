@@ -165,6 +165,11 @@ window.onload = async function(){
     window.requestAnimationFrame(loop);
   })();
 
+  setInterval(async function(){
+    var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDay(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
+    await blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
+  },60000);
+
 }
 </script>
 </head>
