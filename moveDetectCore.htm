@@ -1,0 +1,176 @@
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body {margin:0;background:#222;}
+  input {background:none;position:absolute;z-index:11;left:0pt;width:100%;bottom:0pt;height:30pt;overflow-y:auto;color:#eee;border:0;}
+  canvas {width: 100%}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"></script>
+<script>
+//  * {color:#eee;}
+// #LOG  {position:absolute;z-index:11;left:0pt;width:100%;bottom:0pt;height:30%;overflow-y:auto;}
+// https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js
+
+function newhtml(tag,attributes,ths) {
+  var rv = document.createElement(tag);
+  for (var x in attributes) {
+    if (x=="id" || x=="list") rv.setAttribute(x,attributes[x]);
+    else if (x!="style") rv[x] = attributes[x];
+    else {
+      for (var s in attributes[x]) {
+        rv.style[s] = attributes[x][s];
+      }
+    }
+  }
+  if (tag=="canvas") {
+    rv.ctx = rv.getContext("2d");
+    rv.ctx.canvas = rv;
+  }
+  if (ths) ths.appendChild(rv);
+  return rv;
+}
+
+function ascript(src){
+  return new Promise((resolve, reject) => {
+    let script2 = document.createElement('script');
+    script2.async = true;
+    script2.onload = function() {resolve(script2)}
+    script2.onerror = reject;
+    script2.src = src;
+    document.head.appendChild(script2);
+  })
+}
+
+async function allStreams(type) {
+  var constraints = { video: { frameRate: { ideal: 5, max: 10 } } };
+  if (!type) type = "video";
+  await navigator.mediaDevices.getUserMedia(constraints);
+  devices = await navigator.mediaDevices.enumerateDevices();
+  var rv = [];
+  for (var device of devices) {
+    var deviceKind = type||device.kind.slice(0,-5);
+    var constraints = {};
+    constraints[deviceKind] = {"deviceId":device.deviceId};
+    var stream = {constraints:constraints}
+    stream.device = device;
+    stream.constraints = constraints;
+    stream.settings = [];
+    stream.getMedia = async function() {
+      var ac = await navigator.mediaDevices.getSupportedConstraints();
+      console.log(JSON.stringify(ac))
+      return await navigator.mediaDevices.getUserMedia(this.constraints);
+    }
+    if (!type || type==device.kind.slice(0,-5)) rv.push(stream);
+  }
+  return rv;
+}
+  
+async function beepAlert(value, frequency,time) {
+  var actx = new (window.AudioContext || window.webkitAudioContext)();
+  var node = actx.createGain();
+  node.connect(actx.destination);
+  node.gain.value = value||80;
+  var oscl = actx.createOscillator();
+  oscl.connect(node); 
+  oscl.type = 'sine'; 
+  oscl.frequency.value = frequency||800;
+  oscl.start();
+  await sleep(200);
+  oscl.stop()
+  return oscl;
+}
+
+async function blob2dropbox(blob,filename) {
+  var db = localStorage.getItem("dropbox");
+  try {
+    return await fetch("https://content.dropboxapi.com/2/files/upload", {
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+(localStorage.getItem("dropbox")||dropbox_input.value),
+        'Dropbox-API-Arg':JSON.stringify({path:filename,mode:"overwrite",autorename:true,mute:false}),
+        'Content-Type':'application/octet-stream'
+      },
+      body:blob
+    });
+  } catch(e) {
+    console.log("fetch u error: "+e.message);
+    beep();
+  }
+}
+
+function sleep(ms) {
+    return new Promise(resolve=>setTimeout(resolve, ms));
+}
+var two = (num)=>(num.toString().length==1)?("0"+num):num;
+
+window.onload = async function(){
+
+  dropbox_input = newhtml("input",{
+    value:localStorage.getItem("dropbox"),
+    onchange:function(){localStorage.setItem("dropbox", this.value)}
+  },camlist);
+
+  video.srcObject = await (await allStreams()).reverse()[0].getMedia();
+  await new Promise((resolve)=>{video.onplay=()=>resolve(video)});
+  var last = tf.zeros([1,128,128,3], "float32");
+
+  video.style.width = 1;video.style.height=1;
+
+  function model(x) {
+    const sc = tf.scalar(255);
+    const i1 = tf.image.cropAndResize(x, [[0.45, 0.35, 0.65, 0.65]], [0], [128, 128]);
+    const i2 = tf.cast(i1, "float32");
+    const i3 = tf.div(i2, sc);
+    const i4 = tf.sub(i3, last);
+    last.dispose();
+    const i5 = tf.abs(i4);
+    last = i3;
+    i1.dispose();
+    sc.dispose();
+    i2.dispose();
+    i4.dispose();
+    const i6 = tf.mean(i5);
+    i5.dispose();
+    return [i6,last.reshape([128,128,3])];
+  }
+
+  canvas  = newhtml("canvas",{height:50,width:50},document.body);
+
+  (async function loop() {
+    const sample = tf.browser.fromPixels(video, 3);
+    const xs = tf.reshape(sample, [1].concat(sample.shape));
+    const ys = await model(xs);
+
+    mv = ys[0].dataSync()[0];
+
+    await tf.browser.toPixels(ys[1], canvas);
+
+    sample.dispose();
+    xs.dispose();
+    ys[0].dispose();
+    ys[1].dispose();
+
+    //if (mv>0.04) Window.beep = true;
+    if (mv>0.04) {
+        var blob = await (new Promise(resolve=>canvas.toBlob(resolve)));
+        var dc = new Date();
+        dc = dc.getDate()+"T"+two(dc.getHours())+two(dc.getMinutes())+" "+two(dc.getSeconds())+dc.getMilliseconds();
+        file = "/home/"+dc+".jpg";
+        blob2dropbox(blob,file);
+    }
+
+    LOG.innerText = "tensors "+tf.memory().numTensors;
+    window.requestAnimationFrame(loop);
+  })();
+
+}
+</script>
+</head>
+<body>
+<video id="video" autoplay playsinline></video>
+<div id="camlist"></div>
+<div id="LOG"></div>
+</body>
+</html>
