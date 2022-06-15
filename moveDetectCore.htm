@@ -91,6 +91,8 @@ function datestr() {
     [dc.getHours(), dc.getMinutes(), dc.getSeconds(), dc.getMilliseconds()].map(a=>two(a)).join(".")];
 }
 
+var mv = 0;
+
 window.onload = async function() {
   dropbox_input = newhtml("input",{
     value:localStorage.getItem("dropbox"),
@@ -119,6 +121,9 @@ window.onload = async function() {
     //})
   }
   //canvas  = newhtml("canvas",{height:50,width:50},document.body);
+
+
+
   (async function loop() {
     const sample = tf.browser.fromPixels(video, 3);
     const xs = tf.reshape(sample, [1].concat(sample.shape));
@@ -129,17 +134,29 @@ window.onload = async function() {
     xs.dispose();
     ys[0].dispose();
     ys[1].dispose();
-    if (mv>0.04) {
-        var blob = await (new Promise(resolve=>canvas.toBlob(resolve)));
-        file = "/home/"+datestr().join("/")+".jpg";
-        await blob2dropbox(blob, file);
-    }
-    LOG.innerText = "tensors "+tf.memory().numTensors;
+    await sleep(200);
     window.requestAnimationFrame(loop);
   })();
+
+
+  (async function loop2() {
+    if (mv>0.04) {
+      var blob = await (new Promise(resolve=>canvas.toBlob(resolve)));
+      file = "/home/"+datestr().join("/")+".jpg";
+      await blob2dropbox(blob, file);
+    }
+    await sleep(500);
+    LOG.innerText = "tensors "+tf.memory().numTensors+" mv "+mv;
+    window.requestAnimationFrame(loop2);
+  })();
+
+
   setInterval(async function(){
     await blob2dropbox((new Blob([datestr().join("T")], {type: 'text/plain'})), "/home/ok.txt");
   }, 60000);
+
+
+
 }
 </script>
 </head>
