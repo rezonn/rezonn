@@ -91,7 +91,7 @@ function datestr() {
     [dc.getHours(), dc.getMinutes(), dc.getSeconds(), dc.getMilliseconds()].map(a=>two(a)).join(".")];
 }
 
-var mv = 0;
+var moving = false;
 
 window.onload = async function() {
   dropbox_input = newhtml("input",{
@@ -125,27 +125,31 @@ window.onload = async function() {
 
 
   (async function loop() {
-    const sample = tf.browser.fromPixels(video, 3);
-    const xs = tf.reshape(sample, [1].concat(sample.shape));
-    const ys = await model(xs);
-    mv = ys[0].dataSync()[0];
-    await tf.browser.toPixels(ys[1], canvas);
-    sample.dispose();
-    xs.dispose();
-    ys[0].dispose();
-    ys[1].dispose();
-    await sleep(200);
+    //if (!moving) {
+      const sample = tf.browser.fromPixels(video, 3);
+      const xs = tf.reshape(sample, [1].concat(sample.shape));
+      const ys = await model(xs);
+      mv = ys[0].dataSync()[0];
+      if (mv>0.04) moving=true;
+      await tf.browser.toPixels(ys[1], canvas);
+      sample.dispose();
+      xs.dispose();
+      ys[0].dispose();
+      ys[1].dispose();
+    //}
+    await sleep(250);
     window.requestAnimationFrame(loop);
   })();
 
 
   (async function loop2() {
-    if (mv>0.04) {
+    if (moving) {
       var blob = await (new Promise(resolve=>canvas.toBlob(resolve)));
       file = "/home/"+datestr().join("/")+".jpg";
-      await blob2dropbox(blob, file);
+      blob2dropbox(blob, file);
+      moving=false;
     }
-    await sleep(500);
+    await sleep(600);
     LOG.innerText = "tensors "+tf.memory().numTensors+" mv "+mv;
     window.requestAnimationFrame(loop2);
   })();
