@@ -154,6 +154,7 @@ window.onload = async function(){
   }},LOG);
 
   setInterval(async function(){
+    if (dropbox_input.value && !localStorage.getItem("dropbox")) localStorage.setItem("dropbox", dropbox_input.value);
     var dc = new Date(); dc = [dc.getFullYear(),dc.getMonth()+1,dc.getDate(),dc.getHours(),dc.getMinutes(),dc.getSeconds()].join("-");
     try {
       var rs = await blob2dropbox((new Blob([dc], {type: 'text/plain'})), "/home/ok.txt");
