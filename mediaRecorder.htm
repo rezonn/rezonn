@@ -1,0 +1,46 @@
+<meta charset="utf-8">
+<title>MediaRecorder</title>
+<script>
+
+function newhtml(tag,attributes,ths) {
+  var rv = document.createElement(tag);
+  for (var x in attributes) {
+    if (x!="style") rv[x] = attributes[x];
+    else {
+      for (var s in attributes[x]) {
+        rv.style[s] = attributes[x][s];
+      }
+    }
+  }
+  if (ths) ths.appendChild(rv);
+  return rv;
+}
+
+function stop_blob(Recorder) {
+  return new Promise((resolve, reject) => {
+    Recorder.ondataavailable = function(e) {resolve(e.data)}
+    Recorder.onerror = reject;
+    Recorder.stop();
+  })
+}
+
+window.onload = async function(){
+  var display = newhtml("video",{autoplay:true,muted:true,playsinline:true,onclick:async function () {
+    if (!this.isrec) {
+      this.isrec = true;
+      recorder = new MediaRecorder(this.srcObject);
+      recorder.start();
+    }
+    else {
+      this.isrec = false;
+      var url = window.URL.createObjectURL(await stop_blob(recorder));
+      newhtml("video",{src:url,controls:true,style:{display:"block"}},document.body);
+      newhtml("a",{href:url,download:Date.parse(new Date())+".webm",innerText:"download",style:{display:"block"}},document.body);
+    }
+  }},document.body);
+  display.srcObject = await navigator.mediaDevices.getUserMedia({audio:true, video:true});
+  newhtml("div",{innerText:"click video to start/stop"},document.body);
+}
+
+</script>
+<body></body>
